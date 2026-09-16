@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Astro Sketch Explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0A0718; --panel: #1A1030; --panel-hi: #251642; --sun: #FF5DA2; --sun-soft: #FF8FC5;
+    --dusk: #8B5CF6; --cream: #F5F0E6; --teal: #4DD8E0; --line: #3A2E5C; --danger: #FF6B6B;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--cream);
+    font-family:'Nunito',sans-serif; overscroll-behavior:none; touch-action:manipulation;}
+  body{min-height:100vh; padding-bottom:50px;
+    background:
+      radial-gradient(ellipse 90% 55% at 15% -12%, rgba(255,93,162,0.32), transparent),
+      radial-gradient(ellipse 70% 50% at 88% 6%, rgba(139,92,246,0.38), transparent),
+      radial-gradient(ellipse 60% 45% at 60% 35%, rgba(255,143,197,0.10), transparent),
+      radial-gradient(ellipse 80% 60% at 50% 105%, rgba(77,216,224,0.16), transparent),
+      var(--bg);
+    background-attachment: fixed;}
+  #stars{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.5;}
+  .app{position:relative; z-index:1; max-width:760px; margin:0 auto; padding:18px 16px 60px;}
+
+  .hero{position:relative; text-align:center; padding:26px 10px 18px;}
+  .deco-nebula{position:absolute; top:-32px; right:2%; width:150px; height:100px; pointer-events:none;
+    background:
+      radial-gradient(circle at 30% 45%, rgba(255,93,162,0.6), transparent 60%),
+      radial-gradient(circle at 68% 55%, rgba(139,92,246,0.55), transparent 65%),
+      radial-gradient(circle at 50% 25%, rgba(77,216,224,0.4), transparent 60%);
+    filter: blur(7px); opacity:0.9; animation: float 6s ease-in-out infinite;}
+  .deco-shootingstar{position:absolute; top:14px; left:-6%; width:64px; height:2px; border-radius:2px;
+    background:linear-gradient(to right, transparent, #F5F0E6, transparent);
+    opacity:0; transform:rotate(18deg); animation: shoot 5s linear infinite;}
+  @keyframes float{ 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-8px) scale(1.04);} }
+  @keyframes shoot{
+    0%{ transform:translate(0,0) rotate(18deg); opacity:0; }
+    4%{ opacity:1; }
+    30%{ transform:translate(300px, 80px) rotate(18deg); opacity:0; }
+    100%{ transform:translate(300px, 80px) rotate(18deg); opacity:0; }
+  }
+  .logo{font-size:2.4rem;}
+  .hero h1{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.7rem; margin:6px 0 4px;}
+  .hero p{font-size:0.85rem; color:#B9C0EA; margin:0;}
+
+  .totals{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:14px 0 22px;}
+  .total-pill{background:var(--panel-hi); border:1px solid var(--line); border-radius:999px;
+    padding:8px 16px; font-family:'Baloo 2'; font-weight:700; font-size:0.85rem;}
+
+  .module{margin-bottom:26px;}
+  .module-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;}
+  .module-head h2{font-family:'Baloo 2'; font-size:1rem; margin:0; color:var(--sun-soft);}
+  .module-head .count{font-size:0.72rem; color:#8A92C7;}
+  .row-wrap{position:relative;}
+  .card-row{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;}
+  .card-row::-webkit-scrollbar{display:none;}
+  .card{flex:0 0 auto; width:112px; background:var(--panel); border:2px solid var(--line);
+    border-radius:16px; padding:12px 10px; text-align:center; text-decoration:none; color:inherit;
+    position:relative;}
+  .card.built{border-color:var(--dusk);}
+  .card.notbuilt{opacity:0.42;}
+  .card .ic{font-size:1.6rem;}
+  .card .name{font-family:'Baloo 2'; font-weight:700; font-size:0.78rem; margin-top:6px; line-height:1.2;}
+  .card .status{font-size:0.66rem; color:#8A92C7; margin-top:4px;}
+  .card .lvl-badge{position:absolute; top:-8px; right:-6px; background:var(--teal); color:#08221f;
+    font-family:'Baloo 2'; font-weight:800; font-size:0.62rem; padding:3px 7px; border-radius:999px;
+    box-shadow:0 0 8px rgba(77,216,224,0.5);}
+
+  .footer-note{text-align:center; font-size:0.75rem; color:#5C6499; margin-top:30px; line-height:1.5;}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="app">
+  <div class="hero">
+    <div class="deco-nebula"></div>
+    <div class="deco-shootingstar"></div>
+    <div class="logo">🌌</div>
+    <h1>Astro Sketch Explainer</h1>
+    <p>TAO exam prep · practicing explaining, out loud on the page</p>
+  </div>
+
+  <div class="totals">
+    <div class="total-pill" id="builtTotal">🚀 0 concepts live</div>
+    <div class="total-pill" id="readyTotal">🎯 0 exam-ready</div>
+  </div>
+
+  <div id="modules"></div>
+
+  <p class="footer-note">This app is just for practicing explaining out loud on the page — exam-style. For sketching, spinning, and recognizing concepts, that's still in Astro Sketchbook.</p>
+</div>
+
+<script>
+const LEVELS = {
+  1: { code:'E.01', label:'Launch Prep' },
+  2: { code:'E.02', label:'Guided Flight' },
+  3: { code:'E.03', label:'Solo Flight' },
+  4: { code:'E.04', label:'Mission Ready' },
+};
+
+const MODULES = [
+  {
+    key: 'A1', title: 'A1 · Earth Basics',
+    concepts: [
+      {icon:'🌍', name:'Earth', saveId:'earth'},
+      {icon:'📍', name:'Earth Axis', saveId:'earthaxis'},
+      {icon:'➖', name:'Equator', saveId:'equator'},
+      {icon:'⬆️', name:'North Pole', saveId:'northpole'},
+      {icon:'⬇️', name:'South Pole', saveId:'southpole'},
+      {icon:'↔️', name:'Latitude', saveId:'latitude'},
+      {icon:'↕️', name:'Longitude', saveId:'longitude'},
+      {icon:'🌗', name:'Hemisphere', saveId:'hemisphere'},
+      {icon:'🗺️', name:'Globe vs Map', saveId:'globevsmap'},
+      {icon:'🧭', name:'Compass', saveId:'compass'},
+    ]
+  },
+  {
+    key: 'A2', title: 'A2 · Day & Night',
+    concepts: [
+      {icon:'🔄', name:'Earth Spins', href:'earth-spins.html', saveId:'earthspins'},
+      {icon:'☀️', name:'Day', href:'day.html', saveId:'day'},
+      {icon:'🌙', name:'Night', href:'night.html', saveId:'night'},
+      {icon:'🌅', name:'Sunrise', href:'sunrise.html', saveId:'sunrise'},
+      {icon:'🌇', name:'Sunset', href:'sunset.html', saveId:'sunset'},
+      {icon:'🕛', name:'Noon', href:'noon.html', saveId:'noon'},
+      {icon:'🌃', name:'Midnight', href:'midnight.html', saveId:'midnight'},
+      {icon:'🌑', name:'Shadow', href:'shadow.html', saveId:'shadow'},
+      {icon:'🕐', name:'Time Zone', href:'timezone.html', saveId:'timezone'},
+      {icon:'🌍', name:'Earth Rotation', href:'earthrotation.html', saveId:'earthrotation'},
+    ]
+  },
+  {
+    key: 'A3', title: 'A3 · Seasons',
+    concepts: [
+      {icon:'🛰️', name:'Earth Orbit', saveId:'earthorbit'},
+      {icon:'📐', name:'Tilt', saveId:'tilt'},
+      {icon:'☀️', name:'Summer', saveId:'summer'},
+      {icon:'❄️', name:'Winter', saveId:'winter'},
+      {icon:'🌸', name:'Spring', saveId:'spring'},
+      {icon:'🍂', name:'Autumn', saveId:'autumn'},
+      {icon:'📅', name:'Solstice', saveId:'solstice'},
+      {icon:'⚖️', name:'Equinox', saveId:'equinox'},
+      {icon:'📏', name:'Sun Angle', saveId:'sunangle'},
+      {icon:'⏱️', name:'Day Length', saveId:'daylength'},
+    ]
+  },
+  {
+    key: 'A4', title: 'A4 · Moon',
+    concepts: [
+      {icon:'🌕', name:'Full Moon', saveId:'fullmoon'},
+      {icon:'🌑', name:'New Moon', saveId:'newmoon'},
+      {icon:'🌙', name:'Crescent', saveId:'crescent'},
+      {icon:'🌓', name:'Quarter', saveId:'quarter'},
+      {icon:'🌔', name:'Gibbous', saveId:'gibbous'},
+      {icon:'📈', name:'Waxing', saveId:'waxing'},
+      {icon:'📉', name:'Waning', saveId:'waning'},
+      {icon:'🛰️', name:'Moon Orbit', saveId:'moonorbit'},
+      {icon:'🌛', name:'Moonrise', saveId:'moonrise'},
+      {icon:'🌜', name:'Moonset', saveId:'moonset'},
+      {icon:'🌘', name:'Lunar Eclipse', saveId:'lunareclipse'},
+      {icon:'🌞', name:'Solar Eclipse', saveId:'solareclipse'},
+      {icon:'🌊', name:'Tides', saveId:'tides'},
+      {icon:'🌎', name:'Earth-Moon System', saveId:'earthmoonsystem'},
+      {icon:'🕳️', name:'Moon Crater', saveId:'mooncrater'},
+    ]
+  },
+  {
+    key: 'A5', title: 'A5 · Solar System',
+    concepts: [
+      {icon:'☀️', name:'Sun', saveId:'sun'}, {icon:'☿️', name:'Mercury', saveId:'mercury'},
+      {icon:'♀️', name:'Venus', saveId:'venus'}, {icon:'🌍', name:'Earth', saveId:'earthplanet'},
+      {icon:'♂️', name:'Mars', saveId:'mars'}, {icon:'♃', name:'Jupiter', saveId:'jupiter'},
+      {icon:'♄', name:'Saturn', saveId:'saturn'}, {icon:'♅', name:'Uranus', saveId:'uranus'},
+      {icon:'♆', name:'Neptune', saveId:'neptune'}, {icon:'💫', name:'Asteroid Belt', saveId:'asteroidbelt'},
+      {icon:'🪐', name:'Kuiper Belt', saveId:'kuiperbelt'}, {icon:'☄️', name:'Comet', saveId:'comet'},
+      {icon:'🌠', name:'Meteor', saveId:'meteor'}, {icon:'🪨', name:'Meteorite', saveId:'meteorite'},
+      {icon:'🔹', name:'Dwarf Planet', saveId:'dwarfplanet'}, {icon:'⭕', name:'Orbit', saveId:'orbitgeneral'},
+      {icon:'🔁', name:'Revolution', saveId:'revolution'}, {icon:'🔄', name:'Rotation', saveId:'rotationgeneral'},
+      {icon:'🌌', name:'Gravity', saveId:'gravity'}, {icon:'📏', name:'Scale of Solar System', saveId:'scalesolarsystem'},
+    ]
+  },
+  {
+    key: 'A6', title: 'A6 · Sky Observation',
+    concepts: [
+      {icon:'🌅', name:'Horizon', saveId:'horizon'}, {icon:'⬆️', name:'Zenith', saveId:'zenith'},
+      {icon:'📐', name:'Altitude', saveId:'altitude'}, {icon:'🧭', name:'Azimuth', saveId:'azimuth'},
+      {icon:'⭐', name:'Polaris', saveId:'polaris'}, {icon:'✨', name:'Big Dipper', saveId:'bigdipper'},
+      {icon:'✨', name:'Orion', saveId:'orion'}, {icon:'🌌', name:'Milky Way', saveId:'milkyway'},
+      {icon:'✨', name:'Constellation', saveId:'constellation'}, {icon:'🌐', name:'Celestial Sphere', saveId:'celestialsphere'},
+      {icon:'↔️', name:'East-West Motion', saveId:'eastwestmotion'}, {icon:'🔄', name:'Circumpolar Stars', saveId:'circumpolarstars'},
+      {icon:'🌠', name:'Star Trail', saveId:'startrail'}, {icon:'🔭', name:'Telescope', saveId:'telescope'},
+      {icon:'🔎', name:'Binocular', saveId:'binocular'},
+    ]
+  },
+];
+
+function getSupportData(saveId){
+  try{
+    const raw = localStorage.getItem('astro_' + saveId + '_support');
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    if(!parsed || !parsed.level) return null;
+    return parsed;
+  } catch(e){ return null; }
+}
+
+function renderModules(){
+  const root = document.getElementById('modules');
+  root.innerHTML = '';
+  let totalLive = 0, totalReady = 0;
+
+  MODULES.forEach(mod=>{
+    const builtCount = mod.concepts.filter(c=>c.href).length;
+    const section = document.createElement('div');
+    section.className = 'module';
+    section.innerHTML = `
+      <div class="module-head">
+        <h2>${mod.title}</h2>
+        <span class="count">${builtCount}/${mod.concepts.length} live</span>
+      </div>
+      <div class="row-wrap"><div class="card-row"></div></div>
+    `;
+    const row = section.querySelector('.card-row');
+
+    mod.concepts.forEach(c=>{
+      if(c.href){
+        totalLive++;
+        const support = getSupportData(c.saveId);
+        if(support && support.cleanLevel3) totalReady++;
+        const a = document.createElement('a');
+        a.href = c.href;
+        a.className = 'card built';
+        a.innerHTML = `
+          ${support ? `<div class="lvl-badge">${LEVELS[support.level].code}</div>` : ''}
+          <div class="ic">${c.icon}</div>
+          <div class="name">${c.name}</div>
+          <div class="status">${support ? LEVELS[support.level].label : 'Not started'}</div>
+        `;
+        row.appendChild(a);
+      } else {
+        const d = document.createElement('div');
+        d.className = 'card notbuilt';
+        d.innerHTML = `
+          <div class="ic">${c.icon}</div>
+          <div class="name">${c.name}</div>
+          <div class="status">Not built yet</div>
+        `;
+        row.appendChild(d);
+      }
+    });
+    root.appendChild(section);
+  });
+
+  document.getElementById('builtTotal').textContent = '🚀 ' + totalLive + ' concept' + (totalLive===1?'':'s') + ' live';
+  document.getElementById('readyTotal').textContent = '🎯 ' + totalReady + ' exam-ready';
+}
+renderModules();
+
+/* starfield */
+(function(){
+  const c = document.getElementById('stars'); const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); addEventListener('resize', resize);
+  const stars = Array.from({length:110}, ()=>({
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+    r:Math.random()*1.4+0.3, phase:Math.random()*Math.PI*2,
+    speed:Math.random()*0.02+0.008, big: Math.random() < 0.06
+  }));
+  function draw(t){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s=>{
+      const twinkle = 0.35 + 0.45 * (0.5 + 0.5*Math.sin(t*s.speed + s.phase));
+      ctx.globalAlpha = twinkle;
+      ctx.fillStyle = s.big ? '#FF8FC5' : '#F5F0E6';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.big ? s.r*2.2 : s.r, 0, 7);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

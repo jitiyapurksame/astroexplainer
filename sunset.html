@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Concept · Astro Sketch Explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0A0718; --panel: #1A1030; --panel-hi: #251642; --sun: #FF5DA2; --sun-soft: #FF8FC5;
+    --dusk: #8B5CF6; --cream: #F5F0E6; --teal: #4DD8E0; --line: #3A2E5C; --danger: #FF6B6B;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--cream);
+    font-family:'Nunito',sans-serif; overscroll-behavior:none; touch-action:manipulation;}
+  body{min-height:100vh; padding-bottom:40px;}
+  #stars{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.5;}
+  .app{position:relative; z-index:1; max-width:640px; margin:0 auto; padding:18px 16px 60px;}
+
+  header{margin-bottom:6px;}
+  .back-link{color:#8A92C7; text-decoration:none; font-size:0.78rem; font-weight:700;}
+  .concept-title{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.4rem; margin-top:6px;}
+  .concept-sub{font-size:0.8rem; color:#B9C0EA; margin-top:2px;}
+
+  /* Level ladder — always visible, this is the fix for "he couldn't tell what level he was on" */
+  .ladder{display:flex; gap:6px; margin:16px 0 18px;}
+  .rung{flex:1; text-align:center; padding:10px 4px; border-radius:14px; border:2px solid var(--line);
+    background:var(--panel); transition:all .25s;}
+  .rung .code{display:block; font-family:'Baloo 2'; font-weight:800; font-size:0.92rem; color:#5C6499;}
+  .rung .lbl{display:block; font-size:0.56rem; font-weight:700; color:#4A5080; margin-top:2px;
+    text-transform:uppercase; letter-spacing:0.02em;}
+  .rung.past{border-color:#565f9c;}
+  .rung.past .code{color:var(--sun-soft);} .rung.past .lbl{color:#9A7FBF;}
+  .rung.current{border-color:var(--teal); background:rgba(77,216,224,0.12);
+    box-shadow:0 0 16px rgba(77,216,224,0.35); transform:scale(1.06);}
+  .rung.current .code{color:var(--teal);} .rung.current .lbl{color:var(--teal);}
+
+  .prompt{font-size:0.95rem; line-height:1.5; margin-bottom:12px;}
+  .ref-image{background:var(--panel-hi); border:1px solid var(--line); border-radius:16px;
+    padding:12px; margin-bottom:14px; display:flex; justify-content:center;}
+  .ref-image svg{width:100%; max-width:215px; height:auto; display:block;}
+  .starter-row, .keyword-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+  .starter-chip{background:var(--panel-hi); border:1px solid var(--line); border-radius:12px;
+    padding:8px 12px; font-size:0.78rem; cursor:pointer; color:#B9C0EA;}
+  .starter-chip:active{background:var(--dusk); color:#fff;}
+  .word-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+  .word-pill{background:var(--panel-hi); border:1px solid var(--line); border-radius:999px;
+    padding:7px 14px; font-size:0.78rem; cursor:pointer; color:#B9C0EA;}
+  .word-pill:active{background:var(--dusk); color:#fff;}
+  .kw-hint{font-size:0.74rem; color:#8A92C7; margin:0 0 6px;}
+  .kw{background:var(--panel-hi); border:1px solid var(--line); border-radius:999px; padding:5px 12px;
+    font-size:0.74rem; color:#8A92C7; cursor:pointer;}
+  .kw.hit{border-color:var(--teal); color:var(--teal);}
+  textarea#explainBox{width:100%; min-height:130px; background:var(--panel); border:2px solid var(--line);
+    border-radius:16px; color:var(--cream); font-family:'Nunito',sans-serif; font-size:0.92rem;
+    padding:12px; resize:vertical; margin-bottom:12px;}
+  textarea#explainBox:focus{outline:none; border-color:var(--teal);}
+  .primary-btn{width:100%; background:var(--teal); color:#08221f; border:none; border-radius:16px;
+    padding:14px; font-family:'Baloo 2'; font-weight:800; font-size:1rem; cursor:pointer;}
+  .primary-btn:active{transform:scale(0.98);}
+  .mp-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px;}
+  .mp-chip{font-size:0.7rem; font-weight:700; padding:5px 10px; border-radius:999px; border:1px solid var(--line);}
+  .mp-chip.found{border-color:var(--teal); color:var(--teal); background:rgba(77,216,224,0.12);}
+  .mp-chip.missing{border-color:#565f9c; color:#8A92C7;}
+  .hint-card{margin-top:12px; background:rgba(255,93,162,0.1); border:2px solid var(--sun);
+    border-radius:14px; padding:10px 14px; font-size:0.82rem; color:var(--sun-soft); line-height:1.4;}
+  .stuck-link{margin-top:10px; text-align:center; font-size:0.72rem; color:#8A92C7;
+    text-decoration:underline; cursor:pointer;}
+  .locked-note{background:var(--panel-hi); border:1px solid var(--line); border-radius:16px;
+    padding:16px; font-size:0.85rem; color:#B9C0EA; line-height:1.5;}
+  .tab-row{display:flex; gap:8px; margin:0 0 16px;}
+  .tab{flex:1; text-align:center; padding:10px 6px; border-radius:12px; border:2px solid var(--line);
+    background:var(--panel); font-size:0.76rem; font-weight:700; color:#8A92C7; cursor:pointer;}
+  .tab.active{border-color:var(--teal); color:var(--teal); background:rgba(77,216,224,0.1);}
+  .tab.locked{opacity:0.5; cursor:not-allowed;}
+  .exam-label{display:inline-block; background:var(--panel-hi); border:1px solid var(--line);
+    border-radius:8px; padding:2px 8px; font-size:0.68rem; font-weight:700; color:var(--sun-soft);
+    margin-bottom:8px;}
+
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--panel-hi); border:1px solid var(--line); border-radius:14px; padding:10px 18px;
+    font-size:0.82rem; opacity:0; transition:all .3s; z-index:40; max-width:86%; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* Level Up celebration — replaces an easy-to-miss toast for the moment that matters most */
+  .levelup-overlay{position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    background:rgba(10,7,24,0.8); opacity:0; pointer-events:none; transition:opacity .3s;}
+  .levelup-overlay.show{opacity:1; pointer-events:all;}
+  .levelup-card{background:var(--panel); border:3px solid var(--teal); border-radius:24px;
+    padding:30px 34px; text-align:center; box-shadow:0 0 50px rgba(77,216,224,0.45);
+    animation:popIn .4s ease; max-width:280px;}
+  .levelup-card .big{font-size:2.6rem;}
+  .levelup-card .code{font-family:'Baloo 2'; font-weight:800; color:var(--teal); font-size:1.7rem; margin:8px 0 2px;}
+  .levelup-card .lbl{font-family:'Baloo 2'; font-weight:700; color:var(--sun-soft); font-size:1rem; margin-bottom:10px;}
+  .levelup-card p{font-size:0.8rem; color:#B9C0EA; margin:0 0 18px; line-height:1.4;}
+  .levelup-card button{background:var(--teal); border:none; border-radius:12px; padding:10px 24px;
+    font-family:'Baloo 2'; font-weight:800; color:#08221f; cursor:pointer; font-size:0.9rem;}
+  @keyframes popIn{ from{transform:scale(0.7); opacity:0;} to{transform:scale(1); opacity:1;} }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="app">
+  <header>
+    <a class="back-link" href="index.html">← Hub</a>
+    <div class="concept-title" id="titleEl"></div>
+    <div class="concept-sub" id="subEl"></div>
+  </header>
+
+  <div class="ladder" id="ladder"></div>
+
+  <div class="tab-row" id="tabRow"></div>
+
+  <div id="stage"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="levelup-overlay" id="levelupOverlay">
+    <div class="levelup-card">
+      <div class="big">🚀</div>
+      <div class="code" id="luCode"></div>
+      <div class="lbl" id="luLabel"></div>
+      <p id="luMsg"></p>
+      <button id="luClose">Keep going</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONCEPT — the only thing that changes per file.
+   ============================================================ */
+const CONCEPT = {
+  id: 'sunset',
+  icon: '🌇',
+  title: 'Sunset',
+  subtitle: 'A2 · Day & Night',
+  explain: {
+    prompt: "In your own words: what is sunset, and why does it happen on one side of Earth first?",
+    starters: [
+      "Sunset happens when a location ___...",
+      "As Earth spins, a spot on the day side ___...",
+      "The Sun appears to go down because ___..."
+    ],
+    wordChoices: ['spins', 'terminator', 'away from the light', 'west']
+  },
+  // Static SVG only — no interactivity, no hotspots. Purely a memory-jog
+  // reference image, shown at EVERY support level (unlike hints/starters,
+  // which fade) since real exam questions often include a diagram too.
+  referenceImage: `<svg viewBox="0 0 220 155" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="dayClip">
+        <path d="M100,22 A50,50 0 0,1 100,122 Z"/>
+      </clipPath>
+      <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#4DD8E0"/>
+      </marker>
+    </defs>
+    <g stroke="#FFD166" stroke-width="3" stroke-linecap="round" opacity="0.9">
+      <line x1="188" y1="30" x2="168" y2="46"/>
+      <line x1="194" y1="52" x2="170" y2="57"/>
+      <line x1="188" y1="74" x2="168" y2="68"/>
+    </g>
+    <circle cx="197" cy="52" r="13" fill="#FFD166"/>
+    <text x="197" y="82" text-anchor="middle" font-size="9" fill="#FFD166" font-family="Nunito, sans-serif" font-weight="700">SUN</text>
+    <path d="M100,22 A50,50 0 0,0 100,122 Z" fill="#14102A"/>
+    <path d="M100,22 A50,50 0 0,1 100,122 Z" fill="#2F8FC4"/>
+    <ellipse cx="122" cy="52" rx="10" ry="7" fill="#3F9B57" clip-path="url(#dayClip)"/>
+    <ellipse cx="132" cy="90" rx="9" ry="6" fill="#3F9B57" clip-path="url(#dayClip)"/>
+    <ellipse cx="112" cy="100" rx="6" ry="4" fill="#3F9B57" clip-path="url(#dayClip)"/>
+    <circle cx="100" cy="72" r="50" fill="none" stroke="#3A2E5C" stroke-width="2"/>
+    <path d="M62,34 A55,55 0 0,1 138,34" fill="none" stroke="#4DD8E0" stroke-width="3"
+      stroke-linecap="round" marker-end="url(#arrowhead)"/>
+    <text x="122" y="76" text-anchor="middle" font-size="12" fill="#FFFFFF" font-family="Nunito, sans-serif" font-weight="800">DAY</text>
+    <text x="78" y="76" text-anchor="middle" font-size="12" fill="#B9C0EA" font-family="Nunito, sans-serif" font-weight="800">NIGHT</text>
+    <circle cx="115" cy="60" r="3" fill="#F5F0E6"/>
+    <line x1="94" y1="100" x2="106" y2="100" stroke="#F5F0E6" stroke-width="1.5"/>
+    <text x="100" y="112" text-anchor="middle" font-size="8" fill="#F5F0E6" font-family="Nunito, sans-serif">terminator →</text>
+    <text x="100" y="148" text-anchor="middle" font-size="10" fill="#B9C0EA" font-family="Nunito, sans-serif">the boundary spins into darkness</text>
+  </svg>`,
+  // Checklist-based, not AI-graded — see Explainer Lab Concept REVISED §4.
+  markPoints: [
+    { id:'rotation', label:'Rotation', terms:['spin','rotat','turn'] },
+    { id:'terminator', label:'Day/night boundary', terms:['terminator','boundary','line between','edge'] },
+    { id:'direction', label:'Spins away from the light', terms:['west','westward','away from the sun','into the dark','into the night','out of the light'] },
+  ],
+  // Fixed, ordered — revealed one at a time, never an open-ended AI chat.
+  hintSequence: [
+    "Think about what's actually moving — is the day/night boundary moving, or is your location spinning into it?",
+    "Right — your location spins from daylight into the dark side. Which direction does Earth spin, and what does that mean for the horizon the Sun appears to sink below?"
+  ],
+  // Reserved for Phase 2 (Self Check / Exam Questions).
+  examQuestions: [
+    { prompt: "Explain why the Sun appears to set in the west.", marks: 2, markPoints: ['rotation','direction'] }
+  ],
+};
+
+/* ============================================================
+   ENGINE — do not edit per concept (fix bugs here, not per-file)
+   ============================================================ */
+
+const LEVELS = {
+  1: { code:'E.01', label:'Launch Prep' },
+  2: { code:'E.02', label:'Guided Flight' },
+  3: { code:'E.03', label:'Solo Flight' },
+  4: { code:'E.04', label:'Mission Ready' },
+};
+
+const SUPPORT_KEY = 'astro_' + CONCEPT.id + '_support';
+function getSupport(){
+  let s;
+  try{ s = JSON.parse(localStorage.getItem(SUPPORT_KEY)); }catch(e){ s = null; }
+  if(!s || !s.level) s = { level:1, hintsUsedTotal:0, cleanLevel3:false };
+  return s;
+}
+function setSupport(s){ localStorage.setItem(SUPPORT_KEY, JSON.stringify(s)); }
+
+function checkMarkPoints(text, markPoints){
+  const lower = (text||'').toLowerCase();
+  const results = (markPoints||[]).map(mp => ({
+    id: mp.id, label: mp.label,
+    found: mp.terms.some(t => lower.includes(t.toLowerCase()))
+  }));
+  const hits = results.filter(r=>r.found).length;
+  return { results, hits, total: results.length, allFound: results.length>0 && hits===results.length };
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=> t.classList.remove('show'), 2800);
+}
+
+function showLevelUp(newLevel, msg){
+  showCelebration('🚀', LEVELS[newLevel].code, LEVELS[newLevel].label, msg);
+}
+
+function renderLadder(){
+  const support = getSupport();
+  const ladder = document.getElementById('ladder');
+  ladder.innerHTML = [1,2,3,4].map(n=>{
+    const cls = n === support.level ? 'current' : (n < support.level ? 'past' : '');
+    return `<div class="rung ${cls}"><span class="code">${LEVELS[n].code}</span><span class="lbl">${LEVELS[n].label}</span></div>`;
+  }).join('');
+}
+
+let activeTab = 'explainer';
+
+function renderTabs(){
+  const support = getSupport();
+  const examinerUnlocked = support.level >= 3;
+  const tabRow = document.getElementById('tabRow');
+  tabRow.innerHTML = `
+    <div class="tab ${activeTab==='explainer'?'active':''}" data-tab="explainer">🚀 Explainer Lab</div>
+    <div class="tab ${activeTab==='examiner'?'active':''} ${examinerUnlocked?'':'locked'}" data-tab="examiner">
+      ${examinerUnlocked ? '👨‍⚖️ Examiner Mode' : '🔒 Examiner Mode'}
+    </div>
+  `;
+  tabRow.querySelectorAll('.tab').forEach(t=>{
+    t.onclick = ()=>{
+      const tab = t.dataset.tab;
+      if(tab === 'examiner' && !examinerUnlocked){
+        showToast('Reach E.03 · Solo Flight in the Explainer Lab first');
+        return;
+      }
+      activeTab = tab;
+      renderTabs();
+      renderStage();
+    };
+  });
+}
+
+function renderStage(){
+  if(activeTab === 'examiner') renderExaminerMode();
+  else renderExplain();
+}
+
+function showCelebration(icon, code, label, msg){
+  document.getElementById('luCode').textContent = code;
+  document.getElementById('luLabel').textContent = label;
+  document.getElementById('luMsg').textContent = msg;
+  document.querySelector('.levelup-card .big').textContent = icon;
+  const overlay = document.getElementById('levelupOverlay');
+  overlay.classList.add('show');
+  document.getElementById('luClose').onclick = ()=> overlay.classList.remove('show');
+}
+
+document.getElementById('titleEl').textContent = CONCEPT.icon + ' ' + CONCEPT.title;
+document.getElementById('subEl').textContent = CONCEPT.subtitle;
+
+/* session-scoped hint tracking for the CURRENT attempt */
+let explainHintCount = parseInt(sessionStorage.getItem('explainHints_'+CONCEPT.id) || '0');
+let explainUsedHintThisAttempt = sessionStorage.getItem('explainUsedHint_'+CONCEPT.id) === '1';
+
+function renderExplain(){
+  const cfg = CONCEPT.explain;
+  const markPoints = CONCEPT.markPoints || [];
+  const hintSeq = CONCEPT.hintSequence || [];
+  const support = getSupport();
+  const stage = document.getElementById('stage');
+
+  if(support.level >= 4){
+    stage.innerHTML = `<div class="locked-note">🎯 <strong>E.04 · Mission Ready</strong> — this concept has reached the top of the Explainer Lab ladder. Timed Exam Simulation Mode arrives in a later build phase. Nice work getting here independently!</div>`;
+    return;
+  }
+
+  const showStarters = support.level === 1;
+  const showWordChoices = support.level === 2;
+  const placeholder = support.level === 3
+    ? "Write your explanation — no hints this time, you've got this."
+    : support.level === 2
+      ? "Start typing... or tap a word below to add it in"
+      : "Start typing... or tap a sentence starter above";
+
+  stage.innerHTML = `
+    ${CONCEPT.referenceImage ? `<div class="ref-image">${CONCEPT.referenceImage}</div>` : ''}
+    <p class="prompt">${cfg.prompt}</p>
+    ${showStarters ? `<div class="starter-row" id="starterRow"></div>` : ''}
+    ${showWordChoices ? `<div class="word-row" id="wordRow"></div>` : ''}
+    <textarea id="explainBox" placeholder="${placeholder}"></textarea>
+    <div class="mp-row" id="mpRow"></div>
+    <div class="hint-card" id="hintCard" style="display:none;"></div>
+    <button class="primary-btn" id="submitExplain">Check my explanation</button>
+    ${support.level===3 ? `<div class="stuck-link" id="stuckLink">😅 Stuck? Reveal a hint (drops this back to E.02 next time)</div>` : ''}
+  `;
+
+  if(showStarters){
+    const starterRow = document.getElementById('starterRow');
+    cfg.starters.forEach(s=>{
+      const b = document.createElement('div'); b.className='starter-chip'; b.textContent = s;
+      b.onclick = ()=>{
+        const box = document.getElementById('explainBox');
+        box.value = (box.value ? box.value + ' ' : '') + s.replace('...', '');
+        box.focus();
+      };
+      starterRow.appendChild(b);
+    });
+  }
+
+  if(showWordChoices){
+    const wordRow = document.getElementById('wordRow');
+    (cfg.wordChoices || []).forEach(w=>{
+      const chip = document.createElement('div'); chip.className='word-pill'; chip.textContent = w;
+      chip.onclick = ()=>{
+        const box = document.getElementById('explainBox');
+        const start = box.selectionStart ?? box.value.length;
+        const end = box.selectionEnd ?? box.value.length;
+        box.value = box.value.slice(0,start) + w + ' ' + box.value.slice(end);
+        box.focus();
+      };
+      wordRow.appendChild(chip);
+    });
+  }
+
+  function revealNextHint(fromStuckLink){
+    if(explainHintCount >= hintSeq.length) return;
+    const hintCard = document.getElementById('hintCard');
+    hintCard.style.display = 'block';
+    hintCard.innerHTML = `💡 ${hintSeq[explainHintCount]}`;
+    explainHintCount++;
+    sessionStorage.setItem('explainHints_'+CONCEPT.id, explainHintCount);
+    explainUsedHintThisAttempt = true;
+    sessionStorage.setItem('explainUsedHint_'+CONCEPT.id, '1');
+    if(fromStuckLink){
+      const link = document.getElementById('stuckLink');
+      if(link) link.remove();
+    }
+  }
+
+  if(support.level === 3){
+    const stuckLink = document.getElementById('stuckLink');
+    if(stuckLink) stuckLink.onclick = ()=> revealNextHint(true);
+  }
+
+  document.getElementById('submitExplain').onclick = ()=>{
+    const text = document.getElementById('explainBox').value;
+    const result = checkMarkPoints(text, markPoints);
+    const mpRow = document.getElementById('mpRow');
+    mpRow.innerHTML = result.results.map(r=>
+      `<div class="mp-chip ${r.found?'found':'missing'}">${r.found?'✓':'?'} ${r.label}</div>`
+    ).join('');
+
+    if(result.allFound){
+      const usedHint = explainUsedHintThisAttempt;
+      let s = getSupport();
+      const oldLevel = s.level;
+
+      if(s.level === 3){
+        if(usedHint){ s.level = 2; }
+        else { s.cleanLevel3 = true; }
+      } else {
+        // Hints at E.01/E.02 are expected and fine — only E.03 hint use
+        // costs anything (see Explainer Lab Concept REVISED §2). A clean
+        // MARK-POINT pass always advances here, hint or no hint.
+        s.level = Math.min(3, s.level + 1);
+      }
+      s.hintsUsedTotal = (s.hintsUsedTotal||0) + explainHintCount;
+      setSupport(s);
+      sessionStorage.removeItem('explainHints_'+CONCEPT.id);
+      sessionStorage.removeItem('explainUsedHint_'+CONCEPT.id);
+      explainHintCount = 0;
+      explainUsedHintThisAttempt = false;
+
+      renderLadder();
+      renderTabs();
+
+      if(s.level > oldLevel){
+        showLevelUp(s.level, usedHint ? "Complete — a hint was used, but that's how you get here." : "Clean explanation, no hints needed. Great work.");
+      } else if(s.level < oldLevel){
+        showToast(`Complete — but a hint was needed at ${LEVELS[oldLevel].code}, so this drops back to ${LEVELS[s.level].code} for next time. That's normal, not a fail.`);
+      } else if(s.cleanLevel3){
+        showToast(`Clean ${LEVELS[3].code} pass — exam-ready on this one!`);
+      } else {
+        showToast('Nice — complete!');
+      }
+      renderExplain();
+    } else {
+      if(support.level === 1){
+        revealNextHint(false);
+      } else if(support.level === 2){
+        if(explainHintCount < 1){ revealNextHint(false); }
+      }
+      showToast(`${result.hits}/${result.total} mark points found — keep going`);
+    }
+  };
+}
+
+renderLadder();
+renderTabs();
+renderStage();
+
+function renderExaminerMode(){
+  const stage = document.getElementById('stage');
+  const q = (CONCEPT.examQuestions || [])[0];
+  const support = getSupport();
+
+  if(!q){
+    stage.innerHTML = `<div class="locked-note">No exam question written for this concept yet.</div>`;
+    return;
+  }
+
+  stage.innerHTML = `
+    ${CONCEPT.referenceImage ? `<div class="ref-image">${CONCEPT.referenceImage}</div>` : ''}
+    <div class="exam-label">${q.marks} mark${q.marks===1?'':'s'} · exam-style question</div>
+    <p class="prompt">${q.prompt}</p>
+    <textarea id="examBox" placeholder="Write your answer — no hints, no starters this time."></textarea>
+    <div class="mp-row" id="examMpRow"></div>
+    <button class="primary-btn" id="submitExam">Submit answer</button>
+    ${support.selfCheckPassed ? `<div class="hint-card" style="border-color:var(--teal); color:var(--teal); background:rgba(77,216,224,0.1);">🎯 Already passed this one — try again anytime for extra practice.</div>` : ''}
+  `;
+
+  document.getElementById('submitExam').onclick = ()=>{
+    const text = document.getElementById('examBox').value;
+    const qMarkPoints = (CONCEPT.markPoints || []).filter(mp => q.markPoints.includes(mp.id));
+    const result = checkMarkPoints(text, qMarkPoints);
+    const mpRow = document.getElementById('examMpRow');
+    mpRow.innerHTML = result.results.map(r=>
+      `<div class="mp-chip ${r.found?'found':'missing'}">${r.found?'✓':'?'} ${r.label}</div>`
+    ).join('');
+
+    if(result.allFound){
+      let s = getSupport();
+      const already = s.selfCheckPassed;
+      s.selfCheckPassed = true;
+      setSupport(s);
+      if(!already){
+        showCelebration('🎯', 'SELF CHECK', 'Passed!', "You answered the real exam-style question correctly, independently — that's exam-ready.");
+      } else {
+        showToast('Passed again — nice, consistent work.');
+      }
+    } else {
+      showToast(`${result.hits}/${result.total} mark points found — no hints here, just revise and try again`);
+    }
+  };
+}
+
+/* starfield */
+(function(){
+  const c = document.getElementById('stars'); const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); addEventListener('resize', resize);
+  const stars = Array.from({length:90}, ()=>({
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+    r:Math.random()*1.4+0.3, phase:Math.random()*Math.PI*2,
+    speed:Math.random()*0.02+0.008, big: Math.random() < 0.06
+  }));
+  function draw(t){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s=>{
+      const twinkle = 0.35 + 0.45 * (0.5 + 0.5*Math.sin(t*s.speed + s.phase));
+      ctx.globalAlpha = twinkle;
+      ctx.fillStyle = s.big ? '#FF8FC5' : '#F5F0E6';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.big ? s.r*2.2 : s.r, 0, 7);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
