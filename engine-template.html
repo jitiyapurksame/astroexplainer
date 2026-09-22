@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Day · Astro Sketch Explainer</title>
+<title>Concept · Astro Sketch Explainer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -138,64 +138,44 @@
    CONCEPT — the only thing that changes per file.
    ============================================================ */
 const CONCEPT = {
-  id: 'day',
-  icon: '☀️',
-  title: 'Day',
-  subtitle: 'A2 · Day & Night',
+  id: 'placeholder',
+  icon: '🌍',
+  title: 'Concept Title',
+  subtitle: 'A0 · Module Name',
   explain: {
-    prompt: "In your own words: what is daytime, and why does it happen on one side of Earth at a time?",
+    prompt: "In your own words: explain the concept.",
     starters: [
-      "Daytime happens on the side of Earth that ___...",
-      "It's bright during the day because ___...",
-      "As Earth spins, the day side ___..."
+      "It happens because ___...",
+      "This causes ___..."
     ],
-    wordChoices: ['facing', 'sunlight', 'spins', 'bright']
+    // Single tappable words/short phrases for E.02 (Guided Flight) — a
+    // middle step between full sentence starters (E.01) and a blank box
+    // (E.03). Not full mark-point term lists — pick the clearest single
+    // word per mark point so the pills stay short and tappable.
+    wordChoices: ['word1', 'word2', 'word3']
   },
   // Static SVG only — no interactivity, no hotspots. Purely a memory-jog
   // reference image, shown at EVERY support level (unlike hints/starters,
   // which fade) since real exam questions often include a diagram too.
-  referenceImage: `<svg viewBox="0 0 220 155" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <clipPath id="dayClip">
-        <path d="M100,22 A50,50 0 0,1 100,122 Z"/>
-      </clipPath>
-      <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-        <path d="M0,0 L8,4 L0,8 Z" fill="#4DD8E0"/>
-      </marker>
-    </defs>
-    <g stroke="#FFD166" stroke-width="3" stroke-linecap="round" opacity="0.9">
-      <line x1="188" y1="30" x2="168" y2="46"/>
-      <line x1="194" y1="52" x2="170" y2="57"/>
-      <line x1="188" y1="74" x2="168" y2="68"/>
-    </g>
-    <circle cx="197" cy="52" r="13" fill="#FFD166"/>
-    <text x="197" y="82" text-anchor="middle" font-size="9" fill="#FFD166" font-family="Nunito, sans-serif" font-weight="700">SUN</text>
-    <path d="M100,22 A50,50 0 0,0 100,122 Z" fill="#14102A"/>
-    <path d="M100,22 A50,50 0 0,1 100,122 Z" fill="#2F8FC4"/>
-    <ellipse cx="122" cy="52" rx="10" ry="7" fill="#3F9B57" clip-path="url(#dayClip)"/>
-    <ellipse cx="132" cy="90" rx="9" ry="6" fill="#3F9B57" clip-path="url(#dayClip)"/>
-    <ellipse cx="112" cy="100" rx="6" ry="4" fill="#3F9B57" clip-path="url(#dayClip)"/>
-    <circle cx="100" cy="72" r="50" fill="none" stroke="#3A2E5C" stroke-width="2"/>
-    <path d="M62,34 A55,55 0 0,1 138,34" fill="none" stroke="#4DD8E0" stroke-width="3"
-      stroke-linecap="round" marker-end="url(#arrowhead)"/>
-    <text x="122" y="76" text-anchor="middle" font-size="12" fill="#FFFFFF" font-family="Nunito, sans-serif" font-weight="800">DAY</text>
-    <text x="78" y="76" text-anchor="middle" font-size="12" fill="#B9C0EA" font-family="Nunito, sans-serif" font-weight="800">NIGHT</text>
-    <text x="100" y="148" text-anchor="middle" font-size="10" fill="#B9C0EA" font-family="Nunito, sans-serif">the day side faces the Sun</text>
+  // Keep it recognizable and labeled (e.g. "DAY"/"NIGHT"/"SUN", not just
+  // color blocks) — see earth-spins.html for a worked example.
+  referenceImage: `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="70" r="50" fill="#251642" stroke="#3A2E5C" stroke-width="2"/>
+    <text x="100" y="74" text-anchor="middle" font-size="11" fill="#8A92C7" font-family="Nunito, sans-serif">diagram</text>
   </svg>`,
   // Checklist-based, not AI-graded — see Explainer Lab Concept REVISED §4.
   markPoints: [
-    { id:'facingSun', label:'Facing the Sun', terms:['face','facing','toward','towards'] },
-    { id:'receivesLight', label:'Receiving sunlight', terms:['light','sun','bright','warm'] },
-    { id:'rotationCause', label:'Because Earth spins', terms:['spin','rotat','turn'] },
+    { id:'point1', label:'Key idea 1', terms:['term1','synonym1'] },
+    { id:'point2', label:'Key idea 2', terms:['term2'] },
   ],
   // Fixed, ordered — revealed one at a time, never an open-ended AI chat.
   hintSequence: [
-    "Think about which part of Earth the Sun's light can actually reach right now — what is that side doing?",
-    "Good — it's facing the Sun. But WHICH side faces the Sun keeps changing — what's causing that change?"
+    "First hint...",
+    "Second hint...",
   ],
   // Reserved for Phase 2 (Self Check / Exam Questions).
   examQuestions: [
-    { prompt: "Explain what causes daytime on Earth.", marks: 2, markPoints: ['facingSun','rotationCause'] }
+    { prompt: "Exam-style question here.", marks: 3, markPoints: ['point1','point2'] }
   ],
 };
 
@@ -264,7 +244,7 @@ function renderTabs(){
   tabRow.innerHTML = `
     <div class="tab ${activeTab==='explainer'?'active':''}" data-tab="explainer">🚀 Explainer Lab</div>
     <div class="tab ${activeTab==='examiner'?'active':''} ${examinerUnlocked?'':'locked'}" data-tab="examiner">
-      ${examinerUnlocked ? '👨‍⚖️ Examiner Mode' : '🔒 Examiner Mode'}
+      ${examinerUnlocked ? '👨\u200d⚖️ Examiner Mode' : '🔒 Examiner Mode'}
     </div>
     <div class="tab ${activeTab==='card'?'active':''} ${cardUnlocked?'':'locked'}" data-tab="card">
       ${cardUnlocked ? '📖 Card' : '🔒 Card'}

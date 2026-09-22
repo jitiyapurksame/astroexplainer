@@ -77,6 +77,12 @@
   .exam-label{display:inline-block; background:var(--panel-hi); border:1px solid var(--line);
     border-radius:8px; padding:2px 8px; font-size:0.68rem; font-weight:700; color:var(--sun-soft);
     margin-bottom:8px;}
+  .card-badge{display:inline-block; background:rgba(77,216,224,0.15); border:1px solid var(--teal);
+    border-radius:999px; padding:5px 14px; font-family:'Baloo 2'; font-weight:800; font-size:0.78rem;
+    color:var(--teal); margin-bottom:12px;}
+  .mastered-text{background:var(--panel-hi); border:1px solid var(--line); border-radius:16px;
+    padding:14px; font-size:0.9rem; line-height:1.55; color:var(--cream); white-space:pre-wrap;}
+  .card-footnote{font-size:0.72rem; color:#8A92C7; margin-top:10px; line-height:1.4;}
 
   .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
     background:var(--panel-hi); border:1px solid var(--line); border-radius:14px; padding:10px 18px;
@@ -221,6 +227,10 @@ function checkMarkPoints(text, markPoints){
   return { results, hits, total: results.length, allFound: results.length>0 && hits===results.length };
 }
 
+function escapeHtml(str){
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -247,11 +257,15 @@ let activeTab = 'explainer';
 function renderTabs(){
   const support = getSupport();
   const examinerUnlocked = support.level >= 3;
+  const cardUnlocked = !!support.cleanLevel3;
   const tabRow = document.getElementById('tabRow');
   tabRow.innerHTML = `
     <div class="tab ${activeTab==='explainer'?'active':''}" data-tab="explainer">🚀 Explainer Lab</div>
     <div class="tab ${activeTab==='examiner'?'active':''} ${examinerUnlocked?'':'locked'}" data-tab="examiner">
       ${examinerUnlocked ? '👨‍⚖️ Examiner Mode' : '🔒 Examiner Mode'}
+    </div>
+    <div class="tab ${activeTab==='card'?'active':''} ${cardUnlocked?'':'locked'}" data-tab="card">
+      ${cardUnlocked ? '📖 Card' : '🔒 Card'}
     </div>
   `;
   tabRow.querySelectorAll('.tab').forEach(t=>{
@@ -259,6 +273,10 @@ function renderTabs(){
       const tab = t.dataset.tab;
       if(tab === 'examiner' && !examinerUnlocked){
         showToast('Reach E.03 · Solo Flight in the Explainer Lab first');
+        return;
+      }
+      if(tab === 'card' && !cardUnlocked){
+        showToast("Get a clean E.03 pass (no hints) to unlock this concept's card");
         return;
       }
       activeTab = tab;
@@ -270,6 +288,7 @@ function renderTabs(){
 
 function renderStage(){
   if(activeTab === 'examiner') renderExaminerMode();
+  else if(activeTab === 'card') renderConceptCard();
   else renderExplain();
 }
 
@@ -303,24 +322,44 @@ function renderExplain(){
   }
 
   const showStarters = support.level === 1;
-  const showWordChoices = support.level === 2;
+  const showWordChoices = support.level === 1 || support.level === 2;
   const placeholder = support.level === 3
     ? "Write your explanation — no hints this time, you've got this."
     : support.level === 2
       ? "Start typing... or tap a word below to add it in"
-      : "Start typing... or tap a sentence starter above";
+      : "Start typing... or tap a sentence starter above, or a word below";
+
+  // The answer that passed the level just below this one, if any — lets
+  // him look back at what worked before instead of getting stuck with
+  // nothing to go on (see Explainer Lab Concept REVISED).
+  const prevLevelText = support.levelTexts ? support.levelTexts[support.level - 1] : null;
 
   stage.innerHTML = `
     ${CONCEPT.referenceImage ? `<div class="ref-image">${CONCEPT.referenceImage}</div>` : ''}
     <p class="prompt">${cfg.prompt}</p>
+    ${prevLevelText ? `<div class="stuck-link" id="prevAnswerLink">👀 See what you wrote to pass E.0${support.level - 1}</div>
+    <div class="mastered-text" id="prevAnswerCard" style="display:none; margin-bottom:12px;"></div>` : ''}
     ${showStarters ? `<div class="starter-row" id="starterRow"></div>` : ''}
     ${showWordChoices ? `<div class="word-row" id="wordRow"></div>` : ''}
     <textarea id="explainBox" placeholder="${placeholder}"></textarea>
     <div class="mp-row" id="mpRow"></div>
     <div class="hint-card" id="hintCard" style="display:none;"></div>
     <button class="primary-btn" id="submitExplain">Check my explanation</button>
-    ${support.level===3 ? `<div class="stuck-link" id="stuckLink">😅 Stuck? Reveal a hint (drops this back to E.02 next time)</div>` : ''}
+    ${support.level===3
+      ? `<div class="stuck-link" id="stuckLink">😅 Stuck? Reveal a hint (drops this back to E.02 next time)</div>`
+      : `<div class="stuck-link" id="stuckLink">💡 Need a hint?</div>`}
   `;
+
+  if(prevLevelText){
+    const prevLink = document.getElementById('prevAnswerLink');
+    const prevCard = document.getElementById('prevAnswerCard');
+    prevLink.onclick = ()=>{
+      const isOpen = prevCard.style.display === 'block';
+      prevCard.style.display = isOpen ? 'none' : 'block';
+      if(!isOpen) prevCard.innerHTML = escapeHtml(prevLevelText);
+      prevLink.textContent = isOpen ? `👀 See what you wrote to pass E.0${support.level - 1}` : '🙈 Hide it';
+    };
+  }
 
   if(showStarters){
     const starterRow = document.getElementById('starterRow');
@@ -351,7 +390,11 @@ function renderExplain(){
   }
 
   function revealNextHint(fromStuckLink){
-    if(explainHintCount >= hintSeq.length) return;
+    const link = document.getElementById('stuckLink');
+    if(explainHintCount >= hintSeq.length){
+      if(link) link.remove();
+      return;
+    }
     const hintCard = document.getElementById('hintCard');
     hintCard.style.display = 'block';
     hintCard.innerHTML = `💡 ${hintSeq[explainHintCount]}`;
@@ -359,16 +402,17 @@ function renderExplain(){
     sessionStorage.setItem('explainHints_'+CONCEPT.id, explainHintCount);
     explainUsedHintThisAttempt = true;
     sessionStorage.setItem('explainUsedHint_'+CONCEPT.id, '1');
-    if(fromStuckLink){
-      const link = document.getElementById('stuckLink');
-      if(link) link.remove();
+    if(link){
+      if(explainHintCount >= hintSeq.length){
+        link.remove();
+      } else if(fromStuckLink && support.level !== 3){
+        link.textContent = '💡 Need another hint?';
+      }
     }
   }
 
-  if(support.level === 3){
-    const stuckLink = document.getElementById('stuckLink');
-    if(stuckLink) stuckLink.onclick = ()=> revealNextHint(true);
-  }
+  const stuckLink = document.getElementById('stuckLink');
+  if(stuckLink) stuckLink.onclick = ()=> revealNextHint(true);
 
   document.getElementById('submitExplain').onclick = ()=>{
     const text = document.getElementById('explainBox').value;
@@ -382,10 +426,19 @@ function renderExplain(){
       const usedHint = explainUsedHintThisAttempt;
       let s = getSupport();
       const oldLevel = s.level;
+      const alreadyMastered = !!s.cleanLevel3;
+
+      // Save the answer that passed this level so a higher level can
+      // offer it back to him if he gets stuck (see prevLevelText above).
+      if(!s.levelTexts) s.levelTexts = {};
+      s.levelTexts[oldLevel] = text;
 
       if(s.level === 3){
         if(usedHint){ s.level = 2; }
-        else { s.cleanLevel3 = true; }
+        else {
+          s.cleanLevel3 = true;
+          s.masteredText = text;
+        }
       } else {
         // Hints at E.01/E.02 are expected and fine — only E.03 hint use
         // costs anything (see Explainer Lab Concept REVISED §2). A clean
@@ -406,8 +459,14 @@ function renderExplain(){
         showLevelUp(s.level, usedHint ? "Complete — a hint was used, but that's how you get here." : "Clean explanation, no hints needed. Great work.");
       } else if(s.level < oldLevel){
         showToast(`Complete — but a hint was needed at ${LEVELS[oldLevel].code}, so this drops back to ${LEVELS[s.level].code} for next time. That's normal, not a fail.`);
+      } else if(s.cleanLevel3 && !alreadyMastered){
+        // First-ever clean, no-hint E.03 pass — this IS full mastery of
+        // the concept (see Explainer Lab Concept REVISED). Give it the
+        // same weight as a level-up, and save the explanation as the
+        // concept's Card so he can come back and reread it.
+        showCelebration('🎓', 'MASTERED', 'Concept Mastered!', "Clean explanation, no hints — you've fully got this one. Your Concept Card is saved below.");
       } else if(s.cleanLevel3){
-        showToast(`Clean ${LEVELS[3].code} pass — exam-ready on this one!`);
+        showToast('Already mastered — nice, consistent work!');
       } else {
         showToast('Nice — complete!');
       }
@@ -470,6 +529,29 @@ function renderExaminerMode(){
       showToast(`${result.hits}/${result.total} mark points found — no hints here, just revise and try again`);
     }
   };
+}
+
+function renderConceptCard(){
+  const stage = document.getElementById('stage');
+  const support = getSupport();
+
+  // Locked until a clean, no-hint E.03 pass — see the submit handler in
+  // renderExplain(), which is the only place cleanLevel3/masteredText get set.
+  if(!support.cleanLevel3){
+    stage.innerHTML = `<div class="locked-note">📖 Get a clean E.03 · Solo Flight pass (no hints) in the Explainer Lab to unlock this concept's card.</div>`;
+    return;
+  }
+
+  stage.innerHTML = `
+    <div class="card-badge">🎓 Concept Mastered</div>
+    ${CONCEPT.referenceImage ? `<div class="ref-image">${CONCEPT.referenceImage}</div>` : ''}
+    <p class="prompt">${CONCEPT.explain.prompt}</p>
+    ${support.masteredText
+      ? `<div class="mastered-text">${escapeHtml(support.masteredText)}</div>
+         <div class="card-footnote">This is the explanation that earned mastery — come back and reread it anytime.</div>`
+      : `<div class="mastered-text" style="color:#8A92C7; font-style:italic;">This concept was mastered before the Concept Card feature existed, so the original explanation wasn't saved. Submit a clean E.03 answer once more here and it'll be saved for next time.</div>`
+    }
+  `;
 }
 
 /* starfield */
