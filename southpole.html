@@ -160,9 +160,9 @@ const CONCEPT = {
   <text x="100" y="145" text-anchor="middle" font-size="9" fill="#FF8FC5" font-family="Nunito, sans-serif" font-weight="700">South Pole — bottom of the axis</text>
 </svg>`,
   markPoints: [
-    { id:'axisBottom', label:'Bottom of the axis', terms:['axis', 'bottom of the axis'] },
-    { id:'southernmost', label:'Southernmost point', terms:['furthest south', 'southernmost', 'bottom of the world'] },
-    { id:'oppositeNorth', label:'Opposite the North Pole', terms:['opposite', 'other end from the north pole'] }
+    { id:'axisBottom', label:'Bottom of the axis', terms:['bottom of the axis', 'bottom of earth\'s axis', 'bottom end of', 'end of the axis', 'end of earth\'s axis', 'axis at the bottom', 'axis through the south', 'axis goes through', 'axis passes', 'axis points to', 'axis comes out', 'axis meets', 'axis ends', 'axis exits', 'where the axis', 'where earth\'s axis'] },
+    { id:'southernmost', label:'Southernmost point', terms:['furthest south', 'farthest south', 'southernmost', 'most southern', 'bottom of the world'] },
+    { id:'oppositeNorth', label:'Opposite the North Pole', terms:['opposite the north', 'opposite to the north', 'opposite of the north', 'opposite from the north', 'opposite end', 'other end', 'opposite side', 'across from the north', 'farthest from the north', 'furthest from the north', 'opposite north', 'opposite to north'] }
   ],
   hintSequence: [
     "You've got 'bottom of the world' — bottom of what?",
@@ -194,11 +194,32 @@ function getSupport(){
 }
 function setSupport(s){ localStorage.setItem(SUPPORT_KEY, JSON.stringify(s)); }
 
+// Matching rules (Phase 2): text and terms are normalised (lowercase, curly quotes -> ', hyphens -> space).
+// A term matches only where it STARTS a word (so 'ice' no longer matches 'nice'/'since', 'round' not 'around').
+// A trailing $ on a term means the word must also END there ('ice$' matches 'ice' but not 'iceberg').
+function normText(s){
+  return (s||'').toLowerCase().replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u2013\u2014-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function hasTerm(text, rawTerm){
+  let term = String(rawTerm||'');
+  const whole = term.endsWith('$');
+  if(whole) term = term.slice(0, -1);
+  term = normText(term);
+  if(!term) return false;
+  let i = 0;
+  while((i = text.indexOf(term, i)) !== -1){
+    const before = i === 0 ? '' : text.charAt(i-1);
+    const after = text.charAt(i + term.length);
+    if(!/[a-z0-9]/.test(before) && (!whole || !/[a-z0-9]/.test(after))) return true;
+    i++;
+  }
+  return false;
+}
 function checkMarkPoints(text, markPoints){
-  const lower = (text||'').toLowerCase();
+  const lower = normText(text);
   const results = (markPoints||[]).map(mp => ({
     id: mp.id, label: mp.label,
-    found: mp.terms.some(t => lower.includes(t.toLowerCase()))
+    found: mp.terms.some(t => hasTerm(lower, t))
   }));
   const hits = results.filter(r=>r.found).length;
   return { results, hits, total: results.length, allFound: results.length>0 && hits===results.length };

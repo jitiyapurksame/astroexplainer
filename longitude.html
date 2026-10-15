@@ -161,9 +161,9 @@ const CONCEPT = {
   <text x="100" y="16" text-anchor="middle" font-size="9" fill="#F5F0E6" font-family="Nunito, sans-serif" font-weight="700">longitude — pole to pole (north–south)</text>
 </svg>`,
   markPoints: [
-    { id:'verticalLines', label:'Vertical lines', terms:['vertical', 'up and down', 'pole to pole', 'top to bottom'] },
-    { id:'measuresEastWest', label:'Measures east/west distance', terms:['east or west', 'distance from the prime meridian'] },
-    { id:'meetAtPoles', label:'Meet at the poles', terms:['meet at the poles', 'join at the poles'] }
+    { id:'verticalLines', label:'Vertical lines', terms:['vertical', 'up and down', 'pole to pole', 'top to bottom', 'north to south'] },
+    { id:'measuresEastWest', label:'Measures east/west distance', terms:['east or west', 'east west', 'east and west', 'how far east', 'how far west', 'distance east', 'distance west', 'east of', 'west of', 'distance from the prime meridian', 'distance from prime meridian', 'from the prime meridian'] },
+    { id:'meetAtPoles', label:'Meet at the poles', terms:['meet at the pole', 'meet at both pole', 'meet at each pole', 'meet at the north', 'meet at the south', 'meet at north', 'meet at south', 'join at the pole', 'come together at the pole', 'converge', 'touch at the pole', 'meet at the top', 'meet at the bottom'] }
   ],
   hintSequence: [
     "You've got 'lines around Earth' — which way do these run, side to side or up and down?",
@@ -195,11 +195,32 @@ function getSupport(){
 }
 function setSupport(s){ localStorage.setItem(SUPPORT_KEY, JSON.stringify(s)); }
 
+// Matching rules (Phase 2): text and terms are normalised (lowercase, curly quotes -> ', hyphens -> space).
+// A term matches only where it STARTS a word (so 'ice' no longer matches 'nice'/'since', 'round' not 'around').
+// A trailing $ on a term means the word must also END there ('ice$' matches 'ice' but not 'iceberg').
+function normText(s){
+  return (s||'').toLowerCase().replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u2013\u2014-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function hasTerm(text, rawTerm){
+  let term = String(rawTerm||'');
+  const whole = term.endsWith('$');
+  if(whole) term = term.slice(0, -1);
+  term = normText(term);
+  if(!term) return false;
+  let i = 0;
+  while((i = text.indexOf(term, i)) !== -1){
+    const before = i === 0 ? '' : text.charAt(i-1);
+    const after = text.charAt(i + term.length);
+    if(!/[a-z0-9]/.test(before) && (!whole || !/[a-z0-9]/.test(after))) return true;
+    i++;
+  }
+  return false;
+}
 function checkMarkPoints(text, markPoints){
-  const lower = (text||'').toLowerCase();
+  const lower = normText(text);
   const results = (markPoints||[]).map(mp => ({
     id: mp.id, label: mp.label,
-    found: mp.terms.some(t => lower.includes(t.toLowerCase()))
+    found: mp.terms.some(t => hasTerm(lower, t))
   }));
   const hits = results.filter(r=>r.found).length;
   return { results, hits, total: results.length, allFound: results.length>0 && hits===results.length };

@@ -163,9 +163,9 @@ const CONCEPT = {
   <text x="126" y="75" font-size="9" fill="#4DD8E0" font-family="Nunito, sans-serif" font-weight="700">axis</text>
 </svg>`,
   markPoints: [
-    { id:'imaginaryLine', label:'Imaginary line', terms:['imaginary', 'line'] },
-    { id:'poles', label:'Between the poles', terms:['north pole', 'south pole', 'poles'] },
-    { id:'spinsAround', label:'Spins around it', terms:['spin', 'rotate', 'turn'] }
+    { id:'imaginaryLine', label:'Imaginary line', terms:['imaginary', 'invisible', 'not a real', 'not real', 'pretend', 'line through', 'line from', 'line running', 'line that goes', 'line that runs', 'line between'] },
+    { id:'poles', label:'Between the poles', terms:['north pole', 'south pole', 'poles$', 'pole to pole'] },
+    { id:'spinsAround', label:'Spins around it', terms:['spin', 'rotat', 'earth turns', 'earth is turning', 'turns on', 'turns around', 'turning on', 'turning around'] }
   ],
   hintSequence: [
     "You've got that it's a line — is it a real line you could touch, or imaginary?",
@@ -197,11 +197,32 @@ function getSupport(){
 }
 function setSupport(s){ localStorage.setItem(SUPPORT_KEY, JSON.stringify(s)); }
 
+// Matching rules (Phase 2): text and terms are normalised (lowercase, curly quotes -> ', hyphens -> space).
+// A term matches only where it STARTS a word (so 'ice' no longer matches 'nice'/'since', 'round' not 'around').
+// A trailing $ on a term means the word must also END there ('ice$' matches 'ice' but not 'iceberg').
+function normText(s){
+  return (s||'').toLowerCase().replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u2013\u2014-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function hasTerm(text, rawTerm){
+  let term = String(rawTerm||'');
+  const whole = term.endsWith('$');
+  if(whole) term = term.slice(0, -1);
+  term = normText(term);
+  if(!term) return false;
+  let i = 0;
+  while((i = text.indexOf(term, i)) !== -1){
+    const before = i === 0 ? '' : text.charAt(i-1);
+    const after = text.charAt(i + term.length);
+    if(!/[a-z0-9]/.test(before) && (!whole || !/[a-z0-9]/.test(after))) return true;
+    i++;
+  }
+  return false;
+}
 function checkMarkPoints(text, markPoints){
-  const lower = (text||'').toLowerCase();
+  const lower = normText(text);
   const results = (markPoints||[]).map(mp => ({
     id: mp.id, label: mp.label,
-    found: mp.terms.some(t => lower.includes(t.toLowerCase()))
+    found: mp.terms.some(t => hasTerm(lower, t))
   }));
   const hits = results.filter(r=>r.found).length;
   return { results, hits, total: results.length, allFound: results.length>0 && hits===results.length };

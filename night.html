@@ -184,9 +184,9 @@ const CONCEPT = {
   </svg>`,
   // Checklist-based, not AI-graded — see Explainer Lab Concept REVISED §4.
   markPoints: [
-    { id:'facingAway', label:'Facing away from the Sun', terms:['away','opposite','other side','not facing'] },
-    { id:'noDirectLight', label:'No direct sunlight', terms:['dark','no light','block','shadow'] },
-    { id:'rotationCause', label:'Because Earth spins', terms:['spin','rotat','turn'] },
+    { id:'facingAway', label:'Facing away from the Sun', terms:['facing away', 'faces away', 'face away', 'turned away', 'turns away', 'turning away', 'away from the sun', 'away from the light', 'back to the sun', 'opposite side', 'other side', 'not facing'] },
+    { id:'noDirectLight', label:'No direct sunlight', terms:['dark', 'no light', 'no sunlight', 'no direct', 'not lit', 'isn\'t lit', 'doesn\'t get any light', 'doesn\'t get light', 'does not get any light', 'does not get light', 'doesn\'t receive', 'does not receive', 'cannot reach', 'can\'t reach', 'block', 'shadow'] },
+    { id:'rotationCause', label:'Because Earth spins', terms:['spin', 'rotat', 'earth turns', 'earth is turning', 'turns on', 'turns around', 'turning on', 'turning around'] },
   ],
   // Fixed, ordered — revealed one at a time, never an open-ended AI chat.
   hintSequence: [
@@ -219,11 +219,32 @@ function getSupport(){
 }
 function setSupport(s){ localStorage.setItem(SUPPORT_KEY, JSON.stringify(s)); }
 
+// Matching rules (Phase 2): text and terms are normalised (lowercase, curly quotes -> ', hyphens -> space).
+// A term matches only where it STARTS a word (so 'ice' no longer matches 'nice'/'since', 'round' not 'around').
+// A trailing $ on a term means the word must also END there ('ice$' matches 'ice' but not 'iceberg').
+function normText(s){
+  return (s||'').toLowerCase().replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u2013\u2014-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function hasTerm(text, rawTerm){
+  let term = String(rawTerm||'');
+  const whole = term.endsWith('$');
+  if(whole) term = term.slice(0, -1);
+  term = normText(term);
+  if(!term) return false;
+  let i = 0;
+  while((i = text.indexOf(term, i)) !== -1){
+    const before = i === 0 ? '' : text.charAt(i-1);
+    const after = text.charAt(i + term.length);
+    if(!/[a-z0-9]/.test(before) && (!whole || !/[a-z0-9]/.test(after))) return true;
+    i++;
+  }
+  return false;
+}
 function checkMarkPoints(text, markPoints){
-  const lower = (text||'').toLowerCase();
+  const lower = normText(text);
   const results = (markPoints||[]).map(mp => ({
     id: mp.id, label: mp.label,
-    found: mp.terms.some(t => lower.includes(t.toLowerCase()))
+    found: mp.terms.some(t => hasTerm(lower, t))
   }));
   const hits = results.filter(r=>r.found).length;
   return { results, hits, total: results.length, allFound: results.length>0 && hits===results.length };

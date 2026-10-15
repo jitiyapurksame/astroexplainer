@@ -160,9 +160,9 @@ const CONCEPT = {
   <text x="100" y="16" text-anchor="middle" font-size="9" fill="#F5F0E6" font-family="Nunito, sans-serif" font-weight="700">latitude — runs sideways (east–west)</text>
 </svg>`,
   markPoints: [
-    { id:'horizontalLines', label:'Horizontal lines', terms:['horizontal', 'side to side', 'east-west direction', 'run across'] },
-    { id:'measuresNorthSouth', label:'Measures north/south distance', terms:['north or south', 'distance from equator'] },
-    { id:'equatorZero', label:'Equator is zero', terms:['equator is zero', 'starts at the equator'] }
+    { id:'horizontalLines', label:'Horizontal lines', terms:['horizontal', 'side to side', 'east west', 'east to west', 'west to east', 'left to right', 'sideways', 'parallel', 'run across', 'runs across', 'go across', 'goes across', 'runs around', 'go around'] },
+    { id:'measuresNorthSouth', label:'Measures north/south distance', terms:['north or south', 'north south', 'north and south', 'how far north', 'how far south', 'distance from equator', 'distance from the equator', 'distance north', 'distance south', 'north of', 'south of'] },
+    { id:'equatorZero', label:'Equator is zero', terms:['equator is zero', 'equator is 0', 'equator is at zero', 'equator is at 0', 'equator at 0', '0 degrees', 'zero degrees', '0°', 'zero at the equator', 'starts at the equator', 'start at the equator', 'begins at the equator'] }
   ],
   hintSequence: [
     "You've got 'lines around Earth' — which way do they run, side to side or up and down?",
@@ -194,11 +194,32 @@ function getSupport(){
 }
 function setSupport(s){ localStorage.setItem(SUPPORT_KEY, JSON.stringify(s)); }
 
+// Matching rules (Phase 2): text and terms are normalised (lowercase, curly quotes -> ', hyphens -> space).
+// A term matches only where it STARTS a word (so 'ice' no longer matches 'nice'/'since', 'round' not 'around').
+// A trailing $ on a term means the word must also END there ('ice$' matches 'ice' but not 'iceberg').
+function normText(s){
+  return (s||'').toLowerCase().replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u2013\u2014-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function hasTerm(text, rawTerm){
+  let term = String(rawTerm||'');
+  const whole = term.endsWith('$');
+  if(whole) term = term.slice(0, -1);
+  term = normText(term);
+  if(!term) return false;
+  let i = 0;
+  while((i = text.indexOf(term, i)) !== -1){
+    const before = i === 0 ? '' : text.charAt(i-1);
+    const after = text.charAt(i + term.length);
+    if(!/[a-z0-9]/.test(before) && (!whole || !/[a-z0-9]/.test(after))) return true;
+    i++;
+  }
+  return false;
+}
 function checkMarkPoints(text, markPoints){
-  const lower = (text||'').toLowerCase();
+  const lower = normText(text);
   const results = (markPoints||[]).map(mp => ({
     id: mp.id, label: mp.label,
-    found: mp.terms.some(t => lower.includes(t.toLowerCase()))
+    found: mp.terms.some(t => hasTerm(lower, t))
   }));
   const hits = results.filter(r=>r.found).length;
   return { results, hits, total: results.length, allFound: results.length>0 && hits===results.length };

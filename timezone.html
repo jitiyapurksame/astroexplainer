@@ -179,9 +179,9 @@ const CONCEPT = {
   </svg>`,
   // Checklist-based, not AI-graded — see Explainer Lab Concept REVISED §4.
   markPoints: [
-    { id:'rotationCause', label:'Different places face the Sun at different times', terms:['different times','different place','face the sun at different','depends where you are','depends on location'] },
-    { id:'longitude', label:'Based on longitude (about 15° per hour)', terms:['longitude','15 degrees','15°','degrees of longitude'] },
-    { id:'eastAhead', label:'Places further east are ahead', terms:['further east','east is ahead','ahead in time','east ahead'] },
+    { id:'rotationCause', label:'Different places face the Sun at different times', terms:['face the sun at', 'facing the sun at', 'faces the sun at', 'sun at different', 'sun at a different', 'sun shines on different', 'sun reaches', 'sun hits', 'not facing the sun at the same', 'not all face', 'not every place', 'not every part', 'one side', 'depends where', 'depends on where', 'depends on location', 'depends on the location', 'at different times because', 'at different times as', 'at different times since'] },
+    { id:'longitude', label:'Based on longitude (about 15° per hour)', terms:['longitude', '15 degree', '15°', 'degrees of longitude'] },
+    { id:'eastAhead', label:'Places further east are ahead', terms:['further east', 'farther east', 'east is ahead', 'east are ahead', 'east ahead', 'ahead in time', 'east is later', 'east first', 'sees the sun first', 'more east', 'eastern'] },
   ],
   // Fixed, ordered — revealed one at a time, never an open-ended AI chat.
   hintSequence: [
@@ -214,11 +214,32 @@ function getSupport(){
 }
 function setSupport(s){ localStorage.setItem(SUPPORT_KEY, JSON.stringify(s)); }
 
+// Matching rules (Phase 2): text and terms are normalised (lowercase, curly quotes -> ', hyphens -> space).
+// A term matches only where it STARTS a word (so 'ice' no longer matches 'nice'/'since', 'round' not 'around').
+// A trailing $ on a term means the word must also END there ('ice$' matches 'ice' but not 'iceberg').
+function normText(s){
+  return (s||'').toLowerCase().replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u2013\u2014-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function hasTerm(text, rawTerm){
+  let term = String(rawTerm||'');
+  const whole = term.endsWith('$');
+  if(whole) term = term.slice(0, -1);
+  term = normText(term);
+  if(!term) return false;
+  let i = 0;
+  while((i = text.indexOf(term, i)) !== -1){
+    const before = i === 0 ? '' : text.charAt(i-1);
+    const after = text.charAt(i + term.length);
+    if(!/[a-z0-9]/.test(before) && (!whole || !/[a-z0-9]/.test(after))) return true;
+    i++;
+  }
+  return false;
+}
 function checkMarkPoints(text, markPoints){
-  const lower = (text||'').toLowerCase();
+  const lower = normText(text);
   const results = (markPoints||[]).map(mp => ({
     id: mp.id, label: mp.label,
-    found: mp.terms.some(t => lower.includes(t.toLowerCase()))
+    found: mp.terms.some(t => hasTerm(lower, t))
   }));
   const hits = results.filter(r=>r.found).length;
   return { results, hits, total: results.length, allFound: results.length>0 && hits===results.length };
