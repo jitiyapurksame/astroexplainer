@@ -78,5 +78,17 @@ for(const [f,[good,bad]] of Object.entries(A3)){
   if(b.results.some(r=>r.found)){console.log('A3 FAIL wrong answer passes',f,b.results.filter(r=>r.found).map(r=>r.id));fail++;}
   for(const q of C.examQuestions) for(const id of q.markPoints) if(!C.markPoints.some(m=>m.id===id)){console.log('A3 FAIL exam refs unknown mp',f,id);fail++;}
 }
+// ---- A4 · Moon: cases exported by build_a4.py ----
+const a4p=path.join(__dirname,'a4_cases.json');
+if(fs.existsSync(a4p)){
+  const A4=JSON.parse(fs.readFileSync(a4p,'utf8'));
+  for(const [f,[good,bad]] of Object.entries(A4)){
+    const C=load(f);
+    const g=checkMarkPoints(good,C.markPoints), b=checkMarkPoints(bad,C.markPoints);
+    n++; if(!g.results.every(r=>r.found)){console.log('A4 FAIL model answer',f,g.results.filter(r=>!r.found).map(r=>r.id));fail++;}
+    n++; if(b.results.some(r=>r.found)){console.log('A4 FAIL wrong answer passes',f,b.results.filter(r=>r.found).map(r=>r.id));fail++;}
+    for(const q of C.examQuestions) for(const id of q.markPoints) if(!C.markPoints.some(m=>m.id===id)){console.log('A4 FAIL exam refs unknown mp',f,id);fail++;}
+  }
+}
 console.log(n-fail+'/'+n+' cases pass');
 process.exit(fail?1:0);

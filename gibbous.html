@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Gibbous · Astro Sketch Explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0A0718; --panel: #1A1030; --panel-hi: #251642; --sun: #FF5DA2; --sun-soft: #FF8FC5;
+    --dusk: #8B5CF6; --cream: #F5F0E6; --teal: #4DD8E0; --line: #3A2E5C; --danger: #FF6B6B;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--cream);
+    font-family:'Nunito',sans-serif; overscroll-behavior:none; touch-action:manipulation;}
+  body{min-height:100vh; padding-bottom:40px;}
+  #stars{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.5;}
+  .app{position:relative; z-index:1; max-width:640px; margin:0 auto; padding:18px 16px 60px;}
+
+  header{margin-bottom:6px;}
+  .back-link{color:#8A92C7; text-decoration:none; font-size:0.78rem; font-weight:700;}
+  .concept-title{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.4rem; margin-top:6px;}
+  .concept-sub{font-size:0.8rem; color:#B9C0EA; margin-top:2px;}
+
+  /* Level ladder — always visible, this is the fix for "he couldn't tell what level he was on" */
+  .ladder{display:flex; gap:6px; margin:16px 0 18px;}
+  .rung{flex:1; text-align:center; padding:10px 4px; border-radius:14px; border:2px solid var(--line);
+    background:var(--panel); transition:all .25s;}
+  .rung .code{display:block; font-family:'Baloo 2'; font-weight:800; font-size:0.92rem; color:#5C6499;}
+  .rung .lbl{display:block; font-size:0.56rem; font-weight:700; color:#4A5080; margin-top:2px;
+    text-transform:uppercase; letter-spacing:0.02em;}
+  .rung.past{border-color:#565f9c;}
+  .rung.past .code{color:var(--sun-soft);} .rung.past .lbl{color:#9A7FBF;}
+  .rung.current{border-color:var(--teal); background:rgba(77,216,224,0.12);
+    box-shadow:0 0 16px rgba(77,216,224,0.35); transform:scale(1.06);}
+  .rung.current .code{color:var(--teal);} .rung.current .lbl{color:var(--teal);}
+
+  .prompt{font-size:0.95rem; line-height:1.5; margin-bottom:12px;}
+  .ref-image{background:var(--panel-hi); border:1px solid var(--line); border-radius:16px;
+    padding:12px; margin-bottom:14px; display:flex; justify-content:center;}
+  .ref-image svg{width:100%; max-width:215px; height:auto; display:block;}
+  .starter-row, .keyword-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+  .starter-chip{background:var(--panel-hi); border:1px solid var(--line); border-radius:12px;
+    padding:8px 12px; font-size:0.78rem; cursor:pointer; color:#B9C0EA;}
+  .starter-chip:active{background:var(--dusk); color:#fff;}
+  .word-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+  .word-pill{background:var(--panel-hi); border:1px solid var(--line); border-radius:999px;
+    padding:7px 14px; font-size:0.78rem; cursor:pointer; color:#B9C0EA;}
+  .word-pill:active{background:var(--dusk); color:#fff;}
+  .kw-hint{font-size:0.74rem; color:#8A92C7; margin:0 0 6px;}
+  .kw{background:var(--panel-hi); border:1px solid var(--line); border-radius:999px; padding:5px 12px;
+    font-size:0.74rem; color:#8A92C7; cursor:pointer;}
+  .kw.hit{border-color:var(--teal); color:var(--teal);}
+  textarea#explainBox{width:100%; min-height:130px; background:var(--panel); border:2px solid var(--line);
+    border-radius:16px; color:var(--cream); font-family:'Nunito',sans-serif; font-size:0.92rem;
+    padding:12px; resize:vertical; margin-bottom:12px;}
+  textarea#explainBox:focus{outline:none; border-color:var(--teal);}
+  .primary-btn{width:100%; background:var(--teal); color:#08221f; border:none; border-radius:16px;
+    padding:14px; font-family:'Baloo 2'; font-weight:800; font-size:1rem; cursor:pointer;}
+  .primary-btn:active{transform:scale(0.98);}
+  .mp-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px;}
+  .mp-chip{font-size:0.7rem; font-weight:700; padding:5px 10px; border-radius:999px; border:1px solid var(--line);}
+  .mp-chip.found{border-color:var(--teal); color:var(--teal); background:rgba(77,216,224,0.12);}
+  .mp-chip.missing{border-color:#565f9c; color:#8A92C7;}
+  .hint-card{margin-top:12px; background:rgba(255,93,162,0.1); border:2px solid var(--sun);
+    border-radius:14px; padding:10px 14px; font-size:0.82rem; color:var(--sun-soft); line-height:1.4;}
+  .stuck-link{margin-top:10px; text-align:center; font-size:0.72rem; color:#8A92C7;
+    text-decoration:underline; cursor:pointer;}
+  .locked-note{background:var(--panel-hi); border:1px solid var(--line); border-radius:16px;
+    padding:16px; font-size:0.85rem; color:#B9C0EA; line-height:1.5;}
+  .tab-row{display:flex; gap:8px; margin:0 0 16px;}
+  .tab{flex:1; text-align:center; padding:10px 6px; border-radius:12px; border:2px solid var(--line);
+    background:var(--panel); font-size:0.76rem; font-weight:700; color:#8A92C7; cursor:pointer;}
+  .tab.active{border-color:var(--teal); color:var(--teal); background:rgba(77,216,224,0.1);}
+  .tab.locked{opacity:0.5; cursor:not-allowed;}
+  .exam-label{display:inline-block; background:var(--panel-hi); border:1px solid var(--line);
+    border-radius:8px; padding:2px 8px; font-size:0.68rem; font-weight:700; color:var(--sun-soft);
+    margin-bottom:8px;}
+  .card-badge{display:inline-block; background:rgba(77,216,224,0.15); border:1px solid var(--teal);
+    border-radius:999px; padding:5px 14px; font-family:'Baloo 2'; font-weight:800; font-size:0.78rem;
+    color:var(--teal); margin-bottom:12px;}
+  .mastered-text{background:var(--panel-hi); border:1px solid var(--line); border-radius:16px;
+    padding:14px; font-size:0.9rem; line-height:1.55; color:var(--cream); white-space:pre-wrap;}
+  .card-footnote{font-size:0.72rem; color:#8A92C7; margin-top:10px; line-height:1.4;}
+
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--panel-hi); border:1px solid var(--line); border-radius:14px; padding:10px 18px;
+    font-size:0.82rem; opacity:0; transition:all .3s; z-index:40; max-width:86%; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* Level Up celebration — replaces an easy-to-miss toast for the moment that matters most */
+  .levelup-overlay{position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    background:rgba(10,7,24,0.8); opacity:0; pointer-events:none; transition:opacity .3s;}
+  .levelup-overlay.show{opacity:1; pointer-events:all;}
+  .levelup-card{background:var(--panel); border:3px solid var(--teal); border-radius:24px;
+    padding:30px 34px; text-align:center; box-shadow:0 0 50px rgba(77,216,224,0.45);
+    animation:popIn .4s ease; max-width:280px;}
+  .levelup-card .big{font-size:2.6rem;}
+  .levelup-card .code{font-family:'Baloo 2'; font-weight:800; color:var(--teal); font-size:1.7rem; margin:8px 0 2px;}
+  .levelup-card .lbl{font-family:'Baloo 2'; font-weight:700; color:var(--sun-soft); font-size:1rem; margin-bottom:10px;}
+  .levelup-card p{font-size:0.8rem; color:#B9C0EA; margin:0 0 18px; line-height:1.4;}
+  .levelup-card button{background:var(--teal); border:none; border-radius:12px; padding:10px 24px;
+    font-family:'Baloo 2'; font-weight:800; color:#08221f; cursor:pointer; font-size:0.9rem;}
+  @keyframes popIn{ from{transform:scale(0.7); opacity:0;} to{transform:scale(1); opacity:1;} }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="app">
+  <header>
+    <a class="back-link" href="index.html">← Hub</a>
+    <div class="concept-title" id="titleEl"></div>
+    <div class="concept-sub" id="subEl"></div>
+  </header>
+
+  <div class="ladder" id="ladder"></div>
+
+  <div class="tab-row" id="tabRow"></div>
+
+  <div id="stage"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="levelup-overlay" id="levelupOverlay">
+    <div class="levelup-card">
+      <div class="big">🚀</div>
+      <div class="code" id="luCode"></div>
+      <div class="lbl" id="luLabel"></div>
+      <p id="luMsg"></p>
+      <button id="luClose">Keep going</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONCEPT — the only thing that changes per file.
+   ============================================================ */
+const CONCEPT = {
+  id: 'gibbous',
+  icon: '🌔',
+  title: 'Gibbous',
+  subtitle: 'A4 · Moon',
+  explain: {
+    prompt: "In your own words: what is a Gibbous Moon, and where does it fit between the other phases?",
+    starters: [
+      "A gibbous Moon has ... than half lit.", "It comes between the ... Moon and the Full Moon.", "A gibbous Moon happens ... each month."
+    ],
+    wordChoices: ['more than half', 'almost full', 'between quarter and full', 'waxing and waning']
+  },
+  referenceImage: `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ray" markerUnits="userSpaceOnUse" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#FFD166"/></marker>
+    <marker id="arr" markerUnits="userSpaceOnUse" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#4DD8E0"/></marker>
+  </defs>
+  <text x="100" y="12" text-anchor="middle" font-size="10" fill="#F5F0E6" font-family="Nunito, sans-serif" font-weight="800">GIBBOUS MOON</text><g><circle cx="100" cy="52" r="30" fill="#2A2F4A"/><path d="M100,22 A30,30 0 0 1 100,82 A18.00,30 0 0 1 100,22 Z" fill="#EDE7D3"/><circle cx="100" cy="52" r="30" fill="none" stroke="#3A2E5C" stroke-width="1.5"/></g><text x="100" y="96" text-anchor="middle" font-size="9" fill="#FFD166" font-family="Nunito, sans-serif" font-weight="800">more than half is lit</text><g><circle cx="38" cy="114" r="9" fill="#2A2F4A"/><path d="M38,105 A9,9 0 0 1 38,123 Z" fill="#EDE7D3"/><circle cx="38" cy="114" r="9" fill="none" stroke="#3A2E5C" stroke-width="1.5"/></g><g><circle cx="100" cy="114" r="9" fill="#2A2F4A"/><path d="M100,105 A9,9 0 0 1 100,123 A5.40,9 0 0 1 100,105 Z" fill="#EDE7D3"/><circle cx="100" cy="114" r="9" fill="none" stroke="#3A2E5C" stroke-width="1.5"/></g><g><circle cx="162" cy="114" r="9" fill="#2A2F4A"/><circle cx="162" cy="114" r="9" fill="#EDE7D3"/><circle cx="162" cy="114" r="9" fill="none" stroke="#3A2E5C" stroke-width="1.5"/></g><text x="38" y="133" text-anchor="middle" font-size="7.5" fill="#8A92C7" font-family="Nunito, sans-serif" font-weight="700">Quarter</text><text x="100" y="133" text-anchor="middle" font-size="7.5" fill="#F5F0E6" font-family="Nunito, sans-serif" font-weight="800">GIBBOUS</text><text x="162" y="133" text-anchor="middle" font-size="7.5" fill="#8A92C7" font-family="Nunito, sans-serif" font-weight="700">Full</text>
+</svg>`,
+  markPoints: [
+    { id:'moreThanHalf', label:'More than half is lit, but not full', terms:['more than half', 'over half', 'greater than half', 'bigger than half', 'more than a half', 'almost full', 'nearly full', 'not quite full', 'not fully lit', 'less than full', 'not completely full'] },
+    { id:'betweenPhases', label:'Between a Quarter Moon and a Full Moon', terms:['between quarter and full', 'between the quarter and full', 'between first quarter and full', 'between full and quarter', 'after the quarter', 'before full', 'between a quarter and full', 'quarter and full', 'quarter and the full', 'between a quarter moon and', 'after first quarter', 'before the full', 'after full', 'between half and full', 'next to full moon', 'next to the full'] },
+    { id:'twoPerMonth', label:'Happens twice a month (waxing and waning)', terms:['waxing and waning', 'waxing gibbous', 'waning gibbous', 'two times', 'twice a month', 'twice each month', 'twice per month', 'before and after full', 'before and after the full', 'either side of full', 'both sides of full'] }
+  ],
+  hintSequence: [
+    "Look at the shape. Is the lit part less than half, or more than half?", "Good. Which two phases is it in between?", "Last piece: does a gibbous Moon happen once or twice each month?"
+  ],
+  examQuestions: [
+    { prompt: "Describe a Gibbous Moon and where it fits.", marks: 2, markPoints: ['moreThanHalf', 'betweenPhases'] }
+  ],
+};
+
+/* ============================================================
+   ENGINE — do not edit per concept (fix bugs here, not per-file)
+   ============================================================ */
+
+const LEVELS = {
+  1: { code:'E.01', label:'Launch Prep' },
+  2: { code:'E.02', label:'Guided Flight' },
+  3: { code:'E.03', label:'Solo Flight' },
+  4: { code:'E.04', label:'Mission Ready' },
+};
+
+const SUPPORT_KEY = 'astro_' + CONCEPT.id + '_support';
+function getSupport(){
+  let s;
+  try{ s = JSON.parse(localStorage.getItem(SUPPORT_KEY)); }catch(e){ s = null; }
+  if(!s || !s.level) s = { level:1, hintsUsedTotal:0, cleanLevel3:false };
+  return s;
+}
+function setSupport(s){ localStorage.setItem(SUPPORT_KEY, JSON.stringify(s)); }
+
+// Matching rules (Phase 2): text and terms are normalised (lowercase, curly quotes -> ', hyphens -> space).
+// A term matches only where it STARTS a word (so 'ice' no longer matches 'nice'/'since', 'round' not 'around').
+// A trailing $ on a term means the word must also END there ('ice$' matches 'ice' but not 'iceberg').
+function normText(s){
+  return (s||'').toLowerCase().replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u2013\u2014-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function hasTerm(text, rawTerm){
+  let term = String(rawTerm||'');
+  const whole = term.endsWith('$');
+  if(whole) term = term.slice(0, -1);
+  term = normText(term);
+  if(!term) return false;
+  let i = 0;
+  while((i = text.indexOf(term, i)) !== -1){
+    const before = i === 0 ? '' : text.charAt(i-1);
+    const after = text.charAt(i + term.length);
+    if(!/[a-z0-9]/.test(before) && (!whole || !/[a-z0-9]/.test(after))) return true;
+    i++;
+  }
+  return false;
+}
+function checkMarkPoints(text, markPoints){
+  const lower = normText(text);
+  const results = (markPoints||[]).map(mp => ({
+    id: mp.id, label: mp.label,
+    found: mp.terms.some(t => hasTerm(lower, t))
+  }));
+  const hits = results.filter(r=>r.found).length;
+  return { results, hits, total: results.length, allFound: results.length>0 && hits===results.length };
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=> t.classList.remove('show'), 2800);
+}
+
+function showLevelUp(newLevel, msg){
+  showCelebration('🚀', LEVELS[newLevel].code, LEVELS[newLevel].label, msg);
+}
+
+function renderLadder(){
+  const support = getSupport();
+  const ladder = document.getElementById('ladder');
+  ladder.innerHTML = [1,2,3,4].map(n=>{
+    const cls = n === support.level ? 'current' : (n < support.level ? 'past' : '');
+    return `<div class="rung ${cls}"><span class="code">${LEVELS[n].code}</span><span class="lbl">${LEVELS[n].label}</span></div>`;
+  }).join('');
+}
+
+let activeTab = 'explainer';
+
+function renderTabs(){
+  const support = getSupport();
+  const examinerUnlocked = support.level >= 3;
+  const cardUnlocked = !!support.cleanLevel3;
+  const tabRow = document.getElementById('tabRow');
+  tabRow.innerHTML = `
+    <div class="tab ${activeTab==='explainer'?'active':''}" data-tab="explainer">🚀 Explainer Lab</div>
+    <div class="tab ${activeTab==='examiner'?'active':''} ${examinerUnlocked?'':'locked'}" data-tab="examiner">
+      ${examinerUnlocked ? '👨\u200d⚖️ Examiner Mode' : '🔒 Examiner Mode'}
+    </div>
+    <div class="tab ${activeTab==='card'?'active':''} ${cardUnlocked?'':'locked'}" data-tab="card">
+      ${cardUnlocked ? '📖 Card' : '🔒 Card'}
+    </div>
+  `;
+  tabRow.querySelectorAll('.tab').forEach(t=>{
+    t.onclick = ()=>{
+      const tab = t.dataset.tab;
+      if(tab === 'examiner' && !examinerUnlocked){
+        showToast('Reach E.03 · Solo Flight in the Explainer Lab first');
+        return;
+      }
+      if(tab === 'card' && !cardUnlocked){
+        showToast("Get a clean E.03 pass (no hints) to unlock this concept's card");
+        return;
+      }
+      activeTab = tab;
+      renderTabs();
+      renderStage();
+    };
+  });
+}
+
+function renderStage(){
+  if(activeTab === 'examiner') renderExaminerMode();
+  else if(activeTab === 'card') renderConceptCard();
+  else renderExplain();
+}
+
+function showCelebration(icon, code, label, msg){
+  document.getElementById('luCode').textContent = code;
+  document.getElementById('luLabel').textContent = label;
+  document.getElementById('luMsg').textContent = msg;
+  document.querySelector('.levelup-card .big').textContent = icon;
+  const overlay = document.getElementById('levelupOverlay');
+  overlay.classList.add('show');
+  document.getElementById('luClose').onclick = ()=> overlay.classList.remove('show');
+}
+
+document.getElementById('titleEl').textContent = CONCEPT.icon + ' ' + CONCEPT.title;
+document.getElementById('subEl').textContent = CONCEPT.subtitle;
+
+/* session-scoped hint tracking for the CURRENT attempt */
+let explainHintCount = parseInt(sessionStorage.getItem('explainHints_'+CONCEPT.id) || '0');
+let explainUsedHintThisAttempt = sessionStorage.getItem('explainUsedHint_'+CONCEPT.id) === '1';
+
+function renderExplain(){
+  const cfg = CONCEPT.explain;
+  const markPoints = CONCEPT.markPoints || [];
+  const hintSeq = CONCEPT.hintSequence || [];
+  const support = getSupport();
+  const stage = document.getElementById('stage');
+
+  if(support.level >= 4){
+    stage.innerHTML = `<div class="locked-note">🎯 <strong>E.04 · Mission Ready</strong> — this concept has reached the top of the Explainer Lab ladder. Timed Exam Simulation Mode arrives in a later build phase. Nice work getting here independently!</div>`;
+    return;
+  }
+
+  const showStarters = support.level === 1;
+  const showWordChoices = support.level === 1 || support.level === 2;
+  const placeholder = support.level === 3
+    ? "Write your explanation — no hints this time, you've got this."
+    : support.level === 2
+      ? "Start typing... or tap a word below to add it in"
+      : "Start typing... or tap a sentence starter above, or a word below";
+
+  // The answer that passed the level just below this one, if any — lets
+  // him look back at what worked before instead of getting stuck with
+  // nothing to go on (see Explainer Lab Concept REVISED).
+  const prevLevelText = support.levelTexts ? support.levelTexts[support.level - 1] : null;
+
+  stage.innerHTML = `
+    ${CONCEPT.referenceImage ? `<div class="ref-image">${CONCEPT.referenceImage}</div>` : ''}
+    <p class="prompt">${cfg.prompt}</p>
+    ${prevLevelText ? `<div class="stuck-link" id="prevAnswerLink">👀 See what you wrote to pass E.0${support.level - 1}</div>
+    <div class="mastered-text" id="prevAnswerCard" style="display:none; margin-bottom:12px;"></div>` : ''}
+    ${showStarters ? `<div class="starter-row" id="starterRow"></div>` : ''}
+    ${showWordChoices ? `<div class="word-row" id="wordRow"></div>` : ''}
+    <textarea id="explainBox" placeholder="${placeholder}"></textarea>
+    <div class="mp-row" id="mpRow"></div>
+    <div class="hint-card" id="hintCard" style="display:none;"></div>
+    <button class="primary-btn" id="submitExplain">Check my explanation</button>
+    ${support.level===3
+      ? `<div class="stuck-link" id="stuckLink">😅 Stuck? Reveal a hint (drops this back to E.02 next time)</div>`
+      : `<div class="stuck-link" id="stuckLink">💡 Need a hint?</div>`}
+  `;
+
+  if(prevLevelText){
+    const prevLink = document.getElementById('prevAnswerLink');
+    const prevCard = document.getElementById('prevAnswerCard');
+    prevLink.onclick = ()=>{
+      const isOpen = prevCard.style.display === 'block';
+      prevCard.style.display = isOpen ? 'none' : 'block';
+      if(!isOpen) prevCard.innerHTML = escapeHtml(prevLevelText);
+      prevLink.textContent = isOpen ? `👀 See what you wrote to pass E.0${support.level - 1}` : '🙈 Hide it';
+    };
+  }
+
+  if(showStarters){
+    const starterRow = document.getElementById('starterRow');
+    cfg.starters.forEach(s=>{
+      const b = document.createElement('div'); b.className='starter-chip'; b.textContent = s;
+      b.onclick = ()=>{
+        const box = document.getElementById('explainBox');
+        box.value = (box.value ? box.value + ' ' : '') + s.replace('...', '');
+        box.focus();
+      };
+      starterRow.appendChild(b);
+    });
+  }
+
+  if(showWordChoices){
+    const wordRow = document.getElementById('wordRow');
+    (cfg.wordChoices || []).forEach(w=>{
+      const chip = document.createElement('div'); chip.className='word-pill'; chip.textContent = w;
+      chip.onclick = ()=>{
+        const box = document.getElementById('explainBox');
+        const start = box.selectionStart ?? box.value.length;
+        const end = box.selectionEnd ?? box.value.length;
+        box.value = box.value.slice(0,start) + w + ' ' + box.value.slice(end);
+        box.focus();
+      };
+      wordRow.appendChild(chip);
+    });
+  }
+
+  function revealNextHint(fromStuckLink){
+    const link = document.getElementById('stuckLink');
+    if(explainHintCount >= hintSeq.length){
+      if(link) link.remove();
+      return;
+    }
+    const hintCard = document.getElementById('hintCard');
+    hintCard.style.display = 'block';
+    hintCard.innerHTML = `💡 ${hintSeq[explainHintCount]}`;
+    explainHintCount++;
+    sessionStorage.setItem('explainHints_'+CONCEPT.id, explainHintCount);
+    explainUsedHintThisAttempt = true;
+    sessionStorage.setItem('explainUsedHint_'+CONCEPT.id, '1');
+    if(link){
+      if(explainHintCount >= hintSeq.length){
+        link.remove();
+      } else if(fromStuckLink && support.level !== 3){
+        link.textContent = '💡 Need another hint?';
+      }
+    }
+  }
+
+  const stuckLink = document.getElementById('stuckLink');
+  if(stuckLink) stuckLink.onclick = ()=> revealNextHint(true);
+
+  document.getElementById('submitExplain').onclick = ()=>{
+    const text = document.getElementById('explainBox').value;
+    const result = checkMarkPoints(text, markPoints);
+    const mpRow = document.getElementById('mpRow');
+    mpRow.innerHTML = result.results.map(r=>
+      `<div class="mp-chip ${r.found?'found':'missing'}">${r.found?'✓':'?'} ${r.label}</div>`
+    ).join('');
+
+    if(result.allFound){
+      const usedHint = explainUsedHintThisAttempt;
+      let s = getSupport();
+      const oldLevel = s.level;
+      const alreadyMastered = !!s.cleanLevel3;
+
+      // Save the answer that passed this level so a higher level can
+      // offer it back to him if he gets stuck (see prevLevelText above).
+      if(!s.levelTexts) s.levelTexts = {};
+      s.levelTexts[oldLevel] = text;
+
+      if(s.level === 3){
+        if(usedHint){ s.level = 2; }
+        else {
+          s.cleanLevel3 = true;
+          s.masteredText = text;
+        }
+      } else {
+        // Hints at E.01/E.02 are expected and fine — only E.03 hint use
+        // costs anything (see Explainer Lab Concept REVISED §2). A clean
+        // MARK-POINT pass always advances here, hint or no hint.
+        s.level = Math.min(3, s.level + 1);
+      }
+      s.hintsUsedTotal = (s.hintsUsedTotal||0) + explainHintCount;
+      setSupport(s);
+      sessionStorage.removeItem('explainHints_'+CONCEPT.id);
+      sessionStorage.removeItem('explainUsedHint_'+CONCEPT.id);
+      explainHintCount = 0;
+      explainUsedHintThisAttempt = false;
+
+      renderLadder();
+      renderTabs();
+
+      if(s.level > oldLevel){
+        showLevelUp(s.level, usedHint ? "Complete — a hint was used, but that's how you get here." : "Clean explanation, no hints needed. Great work.");
+      } else if(s.level < oldLevel){
+        showToast(`Complete — but a hint was needed at ${LEVELS[oldLevel].code}, so this drops back to ${LEVELS[s.level].code} for next time. That's normal, not a fail.`);
+      } else if(s.cleanLevel3 && !alreadyMastered){
+        // First-ever clean, no-hint E.03 pass — this IS full mastery of
+        // the concept (see Explainer Lab Concept REVISED). Give it the
+        // same weight as a level-up, and save the explanation as the
+        // concept's Card so he can come back and reread it.
+        showCelebration('🎓', 'MASTERED', 'Concept Mastered!', "Clean explanation, no hints — you've fully got this one. Your Concept Card is saved below.");
+      } else if(s.cleanLevel3){
+        showToast('Already mastered — nice, consistent work!');
+      } else {
+        showToast('Nice — complete!');
+      }
+      renderExplain();
+    } else {
+      if(support.level === 1){
+        revealNextHint(false);
+      } else if(support.level === 2){
+        if(explainHintCount < 1){ revealNextHint(false); }
+      }
+      showToast(`${result.hits}/${result.total} mark points found — keep going`);
+    }
+  };
+}
+
+renderLadder();
+renderTabs();
+renderStage();
+
+function renderExaminerMode(){
+  const stage = document.getElementById('stage');
+  const q = (CONCEPT.examQuestions || [])[0];
+  const support = getSupport();
+
+  if(!q){
+    stage.innerHTML = `<div class="locked-note">No exam question written for this concept yet.</div>`;
+    return;
+  }
+
+  stage.innerHTML = `
+    ${CONCEPT.referenceImage ? `<div class="ref-image">${CONCEPT.referenceImage}</div>` : ''}
+    <div class="exam-label">${q.marks} mark${q.marks===1?'':'s'} · exam-style question</div>
+    <p class="prompt">${q.prompt}</p>
+    <textarea id="examBox" placeholder="Write your answer — no hints, no starters this time."></textarea>
+    <div class="mp-row" id="examMpRow"></div>
+    <button class="primary-btn" id="submitExam">Submit answer</button>
+    ${support.selfCheckPassed ? `<div class="hint-card" style="border-color:var(--teal); color:var(--teal); background:rgba(77,216,224,0.1);">🎯 Already passed this one — try again anytime for extra practice.</div>` : ''}
+  `;
+
+  document.getElementById('submitExam').onclick = ()=>{
+    const text = document.getElementById('examBox').value;
+    const qMarkPoints = (CONCEPT.markPoints || []).filter(mp => q.markPoints.includes(mp.id));
+    const result = checkMarkPoints(text, qMarkPoints);
+    const mpRow = document.getElementById('examMpRow');
+    mpRow.innerHTML = result.results.map(r=>
+      `<div class="mp-chip ${r.found?'found':'missing'}">${r.found?'✓':'?'} ${r.label}</div>`
+    ).join('');
+
+    if(result.allFound){
+      let s = getSupport();
+      const already = s.selfCheckPassed;
+      s.selfCheckPassed = true;
+      setSupport(s);
+      if(!already){
+        showCelebration('🎯', 'SELF CHECK', 'Passed!', "You answered the real exam-style question correctly, independently — that's exam-ready.");
+      } else {
+        showToast('Passed again — nice, consistent work.');
+      }
+    } else {
+      showToast(`${result.hits}/${result.total} mark points found — no hints here, just revise and try again`);
+    }
+  };
+}
+
+function renderConceptCard(){
+  const stage = document.getElementById('stage');
+  const support = getSupport();
+
+  // Locked until a clean, no-hint E.03 pass — see the submit handler in
+  // renderExplain(), which is the only place cleanLevel3/masteredText get set.
+  if(!support.cleanLevel3){
+    stage.innerHTML = `<div class="locked-note">📖 Get a clean E.03 · Solo Flight pass (no hints) in the Explainer Lab to unlock this concept's card.</div>`;
+    return;
+  }
+
+  stage.innerHTML = `
+    <div class="card-badge">🎓 Concept Mastered</div>
+    ${CONCEPT.referenceImage ? `<div class="ref-image">${CONCEPT.referenceImage}</div>` : ''}
+    <p class="prompt">${CONCEPT.explain.prompt}</p>
+    ${support.masteredText
+      ? `<div class="mastered-text">${escapeHtml(support.masteredText)}</div>
+         <div class="card-footnote">This is the explanation that earned mastery — come back and reread it anytime.</div>`
+      : `<div class="mastered-text" style="color:#8A92C7; font-style:italic;">This concept was mastered before the Concept Card feature existed, so the original explanation wasn't saved. Submit a clean E.03 answer once more here and it'll be saved for next time.</div>`
+    }
+  `;
+}
+
+/* starfield */
+(function(){
+  const c = document.getElementById('stars'); const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); addEventListener('resize', resize);
+  const stars = Array.from({length:90}, ()=>({
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+    r:Math.random()*1.4+0.3, phase:Math.random()*Math.PI*2,
+    speed:Math.random()*0.02+0.008, big: Math.random() < 0.06
+  }));
+  function draw(t){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s=>{
+      const twinkle = 0.35 + 0.45 * (0.5 + 0.5*Math.sin(t*s.speed + s.phase));
+      ctx.globalAlpha = twinkle;
+      ctx.fillStyle = s.big ? '#FF8FC5' : '#F5F0E6';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.big ? s.r*2.2 : s.r, 0, 7);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

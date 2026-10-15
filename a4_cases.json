@@ -1,0 +1,62 @@
+{
+ "fullmoon.html": [
+  "At a Full Moon we see the whole face lit up because Earth is in the middle between the Sun and the Moon, and the Moon reflects sunlight.",
+  "A Full Moon is when the Moon is big and yellow."
+ ],
+ "newmoon.html": [
+  "At a New Moon the Moon is between the Earth and the Sun, the lit side faces away from Earth, so we cannot see it.",
+  "A New Moon is when a new moon is made."
+ ],
+ "crescent.html": [
+  "A crescent is a thin sliver of lit Moon seen near the Sun just after sunset. It comes just after the New Moon.",
+  "A crescent is when the Moon is full and round."
+ ],
+ "quarter.html": [
+  "At a Quarter Moon half of its face is lit. It is called a quarter because the Moon is a quarter of the way around its orbit. There are two each month, the first quarter and the last quarter.",
+  "A Quarter Moon costs twenty-five cents."
+ ],
+ "gibbous.html": [
+  "A gibbous Moon has more than half lit but is not full. It comes between a quarter and the Full Moon, and happens twice a month, waxing and waning.",
+  "A gibbous Moon is a kind of monkey."
+ ],
+ "waxing.html": [
+  "Waxing means the lit part is getting bigger, from the New Moon to the Full Moon. It takes about two weeks.",
+  "Waxing is when you put wax on a car."
+ ],
+ "waning.html": [
+  "Waning means the lit part is getting smaller, from the Full Moon to the New Moon. It takes about two weeks.",
+  "Waning is when the Moon gets tired."
+ ],
+ "moonorbit.html": [
+  "The Moon orbits around the Earth. One trip takes about a month, 27 days, and the same side always faces Earth.",
+  "The Moon is far away and shines at night."
+ ],
+ "moonrise.html": [
+  "The Moon rises in the east because the Earth spins, and it comes up above the horizon.",
+  "The Moon rises when it is dark."
+ ],
+ "moonset.html": [
+  "The Moon sets in the west because the Earth spins, and it goes below the horizon.",
+  "The Moon sets when the Sun comes up."
+ ],
+ "lunareclipse.html": [
+  "In a lunar eclipse the Earth is between the Sun and the Moon, so Earth's shadow falls on the Moon. It happens at a Full Moon.",
+  "A lunar eclipse is when the Moon blocks the Sun."
+ ],
+ "solareclipse.html": [
+  "In a solar eclipse the Moon is between the Sun and the Earth, so the Moon's shadow falls on the Earth. It happens at a New Moon.",
+  "A solar eclipse is when the Earth blocks the Sun."
+ ],
+ "tides.html": [
+  "The Moon's gravity pulls the ocean so the water bulges up, which is a high tide. There are two high tides a day.",
+  "Tides are caused by wind blowing the waves."
+ ],
+ "earthmoonsystem.html": [
+  "The Moon orbits the Earth. It is about a quarter the size of Earth and is about 384,000 km away.",
+  "The Earth and the Moon are the same."
+ ],
+ "mooncrater.html": [
+  "A crater is a bowl-shaped hole made when an asteroid hits the Moon. Many craters are billions of years old.",
+  "A crater is a hill on the Moon."
+ ]
+}
