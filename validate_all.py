@@ -36,7 +36,7 @@ ACCEPTED = {("earth","round"),("earth","planet"),("hemisphere","half"),("equator
 lint_fail = False
 for path in sorted(glob.glob(os.path.join(folder, "*.html"))):
     name = os.path.basename(path)
-    if name in ("index.html", "engine-template.html"): continue
+    if name in ("index.html", "engine-template.html", "exam.html"): continue
     html = open(path, encoding="utf-8").read()
     cid = re.search(r"const CONCEPT = \{\s*id:\s*'([^']+)'", html).group(1)
     for m in re.finditer(r"terms:\[([^\]]*)\]", html):
@@ -49,4 +49,28 @@ for path in sorted(glob.glob(os.path.join(folder, "*.html"))):
             elif bare in GENERIC and not t.endswith("$") and (cid, bare) not in ACCEPTED:
                 print(f"{name} LINT WARN: bare generic term '{t}' - prefer a phrase")
 print("term lint:", "FAIL" if lint_fail else "OK")
+
+# ---- Phase 3: exam-data.js must be in sync with the concept files; exam.html must carry the engine's matcher ----
+import shutil, tempfile, filecmp
+exam_fail = False
+if os.path.exists(os.path.join(folder, "exam-data.js")):
+    tmp = tempfile.mkdtemp()
+    shutil.copytree(folder, os.path.join(tmp, "p"))
+    r = subprocess.run(["node", os.path.join(os.path.dirname(os.path.abspath(__file__)), "build_exam_data.js"), os.path.join(tmp, "p")], capture_output=True, text=True)
+    if r.returncode or not filecmp.cmp(os.path.join(tmp, "p", "exam-data.js"), os.path.join(folder, "exam-data.js"), shallow=False):
+        print("exam-data.js FAIL: out of date or invalid - run: node tools/build_exam_data.js", folder, r.stderr[-200:]); exam_fail = True
+    else:
+        print("exam-data.js OK (in sync)")
+    eng = open(os.path.join(folder, "engine-template.html"), encoding="utf-8").read()
+    matcher = eng[eng.index("function normText"):eng.index("function escapeHtml")].rstrip()
+    if matcher not in open(os.path.join(folder, "exam.html"), encoding="utf-8").read():
+        print("exam.html FAIL: matcher differs from engine-template.html - run: python3 tools/build_exam_page.py", folder); exam_fail = True
+    else:
+        print("exam.html matcher OK (identical to engine)")
+# ---- Phase 4: Sentence Builder / Why Chain data must match every concept's real mark points ----
+if os.path.exists(os.path.join(folder, "builder-data.js")):
+    r = subprocess.run(["node", os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_builder.js"), folder], capture_output=True, text=True)
+    print("builder-data.js", "OK:" if r.returncode == 0 else "FAIL:", r.stdout.strip().splitlines()[-1] if r.stdout.strip() else r.stderr[-200:])
+    if r.returncode: print(r.stdout); exam_fail = True
+lint_fail = lint_fail or exam_fail
 sys.exit(0 if (ok_all and not lint_fail) else 1)
